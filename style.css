@@ -1,0 +1,1014 @@
+/* ============================================================
+   정찬민 개인 홈페이지 · 색상, 글자, 간격, 배치
+   외부 폰트나 라이브러리를 쓰지 않고 시스템 글꼴만 사용합니다.
+   색은 스페이스 그레이 계열(순검정 대신 진한 회색)로 맞췄습니다.
+   ============================================================ */
+
+:root {
+  --bg:        #ffffff;
+  --bg-alt:    #f0f0f2;   /* 옅은 스페이스 그레이 */
+  --card:      #ffffff;
+  --text:      #2c2c2e;   /* 순검정 대신 진한 회색 */
+  --muted:     #6b6b70;   /* 회색 섹션 위 4.66:1 (AA 통과) */
+  --line:      rgba(60, 60, 67, 0.18);
+  --accent:    #0071e3;   /* 버튼 배경 */
+  --link:      #0066cc;   /* 본문 링크 */
+  --copper-fill: #9a522c; /* 항구 표시·현재 진행 상태 */
+  --copper-strong: #8d4825;
+  --copper-soft: rgba(154, 82, 44, 0.11);
+  --pill-bg:   rgba(0, 113, 227, 0.12);
+  --header-bg: rgba(255, 255, 255, 0.72);
+  --line-art:  #0071e3;   /* 배경 그림 선 색 */
+  --deep:      #3a3a3c;   /* 연락 영역 배경 · 스페이스 그레이 */
+  --deep-text: #f2f2f7;
+  --deep-muted:#c7c7cc;
+  --maxw:      1240px;    /* 본문 최대 폭 */
+  --radius:    22px;
+  --radius-lg: 28px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #1c1c1e;
+    --bg-alt:    #2c2c2e;
+    --card:      #3a3a3c;
+    --text:      #f2f2f7;
+    --muted:     #aeaeb2;
+    --line:      rgba(255, 255, 255, 0.18);
+    --link:      #5aabff;   /* 어두운 카드 위 4.70:1 (AA 통과) */
+    --copper-fill: #aa6036;
+    --copper-strong: #efb17a;
+    --copper-soft: rgba(239, 177, 122, 0.16);
+    --pill-bg:   rgba(90, 171, 255, 0.18);
+    --header-bg: rgba(28, 28, 30, 0.74);
+    --line-art:  #5aabff;
+    --deep:      #3a3a3c;
+    --deep-muted:#c7c7cc;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px; /* 고정 메뉴에 제목이 가리지 않도록 */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo",
+               "Pretendard", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+  font-size: 19px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--link); text-underline-offset: 4px; }
+
+a:focus-visible,
+.button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.container {
+  width: min(var(--maxw), calc(100% - 80px));
+  margin-inline: auto;
+}
+
+.skip-link {
+  position: absolute;
+  top: -80px;
+  inset-inline-start: 16px;
+  z-index: 20;
+  padding: 12px 18px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 16px;
+  text-decoration: none;
+}
+.skip-link:focus { top: 12px; }
+
+/* ── 상단 고정 메뉴 ─────────────────────────────────────── */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--line);
+  background: var(--header-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 68px;
+}
+
+.site-name {
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 34px;
+}
+
+.site-nav a {
+  color: var(--text);
+  font-size: 17px;
+  opacity: 0.82;
+  text-decoration: none;
+}
+.site-nav a:hover { opacity: 1; text-decoration: underline; }
+.site-nav a[aria-current="location"] {
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* ── 첫 화면 ───────────────────────────────────────────── */
+
+.hero {
+  display: grid;
+  align-content: center;
+  min-height: min(88vh, 860px);
+  padding: 80px 0;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+h1 {
+  margin: 0 0 28px;
+  font-size: clamp(46px, 7.4vw, 104px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.lead {
+  max-width: 34ch;
+  margin: 0 auto 44px;
+  color: var(--muted);
+  font-size: clamp(21px, 2.3vw, 32px);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 16px 36px;
+  margin: 0;
+}
+
+.hero-signal {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: stretch;
+  width: min(760px, 100%);
+  min-height: 64px;
+  margin: 52px auto 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.06);
+  text-align: start;
+}
+
+.hero-signal-index {
+  display: grid;
+  place-items: center;
+  background: var(--copper-fill);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.hero-signal-route,
+.hero-signal-tag {
+  display: flex;
+  align-items: center;
+  padding-inline: 24px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.hero-signal-route b {
+  margin-inline: 12px;
+  color: var(--copper-strong);
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.hero-signal-tag {
+  border-inline-start: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.button {
+  display: inline-block;
+  padding: 15px 32px;
+  border-radius: 980px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.button:hover { background: #0077ed; }
+
+.button-light { background: #f2f2f7; color: #2c2c2e; }
+.button-light:hover { background: #ffffff; }
+
+.text-link {
+  font-size: 19px;
+  text-decoration: none;
+}
+.text-link:hover { text-decoration: underline; }
+
+/* ── 공통 섹션 ─────────────────────────────────────────── */
+
+.section { padding: clamp(88px, 11vw, 168px) 0; }
+.section-alt { background: var(--bg-alt); }
+
+.section-eyebrow {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: clamp(34px, 4.6vw, 60px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.statement {
+  max-width: 20ch;
+  font-size: clamp(34px, 4.8vw, 62px);
+}
+
+.section-description {
+  max-width: 58ch;
+  margin: 0 0 64px;
+  color: var(--muted);
+  font-size: clamp(19px, 1.7vw, 24px);
+  line-height: 1.45;
+}
+
+.body-text {
+  max-width: 60ch;
+  margin: 32px 0 0;
+  color: var(--muted);
+  font-size: clamp(18px, 1.4vw, 21px);
+  line-height: 1.62;
+}
+
+.subhead {
+  margin: 0 0 32px;
+  font-size: clamp(24px, 2.2vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* ── 소개: 사실 목록 ───────────────────────────────────── */
+
+.fact-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0 48px;
+  margin: 72px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.fact-list li {
+  padding: 32px 0 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.fact-label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.fact-value {
+  display: block;
+  font-size: clamp(22px, 1.9vw, 28px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+/* ── 이력: 기본 정보 표 ────────────────────────────────── */
+
+.spec-list {
+  margin: 0 0 96px;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.spec-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) 1fr;
+  gap: 24px;
+  align-items: baseline;
+  padding: 30px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.spec-row dt {
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.spec-row dd {
+  margin: 0;
+  font-size: clamp(22px, 1.9vw, 30px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.card .cert-name {
+  margin: 0 0 14px;
+  color: var(--text);
+  font-size: clamp(22px, 1.9vw, 28px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* ── 카드(관심 분야 · 자격증) ──────────────────────────── */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  padding: 48px 40px;
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+}
+
+.section-alt .card { background: var(--card); }
+
+.card h3 {
+  margin: 0 0 16px;
+  font-size: clamp(24px, 2vw, 30px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* ── 프로젝트 카드 ─────────────────────────────────────── */
+
+.project-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+  gap: 28px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-list--single { grid-template-columns: minmax(0, 820px); }
+
+.project-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.8fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.project-layout .project-list--single { width: 100%; }
+
+.project-archive {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(32px, 3vw, 46px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--bg-alt);
+}
+
+.archive-label {
+  margin: 0 0 16px;
+  color: var(--copper-strong);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.project-archive h3 {
+  margin: 0;
+  font-size: clamp(25px, 2.2vw, 34px);
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+}
+
+.archive-list {
+  display: grid;
+  gap: 0;
+  margin: auto 0 0;
+  padding: 38px 0 0;
+  list-style: none;
+}
+
+.archive-list li {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.archive-list li > span {
+  color: var(--muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.archive-list strong,
+.archive-list small { display: block; }
+
+.archive-list strong {
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.archive-list small {
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.archive-list .is-active { color: var(--copper-strong); }
+.archive-list .is-active > span,
+.archive-list .is-active strong { color: var(--copper-strong); }
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(36px, 3.4vw, 56px);
+  border-radius: var(--radius-lg);
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+}
+
+.section-alt .project-card { background: var(--card); }
+
+.status {
+  align-self: flex-start;
+  margin: 0 0 20px;
+  padding: 7px 16px;
+  border-radius: 980px;
+  background: var(--copper-soft);
+  color: var(--copper-strong);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.project-card h3 {
+  margin: 0 0 16px;
+  font-size: clamp(26px, 2.4vw, 36px);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.028em;
+}
+
+.project-summary {
+  max-width: 46ch;
+  margin: 0 0 auto;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* 실제 결과를 꾸미지 않고도 프로젝트가 어느 단계인지 보여 주는 설계 보드입니다. */
+.project-dashboard {
+  margin: 34px 0 0;
+  padding: 22px;
+  border: 1px solid color-mix(in srgb, var(--copper-fill) 28%, var(--line));
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--copper-soft), transparent 62%);
+}
+
+.dashboard-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dashboard-heading p,
+.dashboard-heading span {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.dashboard-heading p { color: var(--text); }
+.dashboard-heading span { color: var(--copper-strong); }
+
+.readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.readiness-grid li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 0 10px;
+  padding: 18px 16px 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.readiness-grid li:nth-child(odd) { border-inline-end: 1px solid var(--line); }
+.readiness-grid li:nth-child(even) { padding-inline: 16px 0; }
+.readiness-grid li:nth-last-child(-n + 2) { border-bottom: 0; }
+
+.readiness-number {
+  grid-row: span 2;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.readiness-grid strong,
+.readiness-grid small,
+.readiness-grid em { display: block; }
+
+.readiness-grid strong {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.readiness-grid small {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.readiness-grid em {
+  grid-column: 2;
+  margin-top: 11px;
+  color: var(--muted);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.readiness-grid .is-current .readiness-number,
+.readiness-grid .is-current em { color: var(--copper-strong); }
+
+.project-meta {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  gap: 14px 28px;
+  margin: 40px 0 0;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+  font-size: 18px;
+}
+
+.project-meta dt {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.project-meta dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ── 연락 영역(스페이스 그레이) ────────────────────────── */
+
+.section-dark {
+  background: var(--deep);
+  color: var(--deep-text);
+}
+.section-dark .statement { color: var(--deep-text); }
+.section-dark .body-text { color: var(--deep-muted); }
+.section-dark .text-link { color: var(--deep-text); }
+.section-dark a:focus-visible { outline-color: #ffffff; }
+
+.contact-actions {
+  justify-content: flex-start;
+  margin-top: 36px;
+}
+
+/* ── 바닥 ──────────────────────────────────────────────── */
+
+.site-footer {
+  padding: 48px 0 64px;
+  background: var(--bg-alt);
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.site-footer p { margin: 0 0 8px; max-width: 70ch; }
+.copyright { color: var(--muted); }
+
+/* ── 노트북·태블릿 ─────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .container { width: calc(100% - 64px); }
+  .project-list { grid-template-columns: 1fr; }
+  .project-layout { grid-template-columns: 1fr; }
+}
+
+/* ── 좁은 화면(약 390px 기준) ──────────────────────────── */
+
+@media (max-width: 700px) {
+  .container { width: calc(100% - 40px); }
+
+  body { font-size: 17px; }
+
+  /* 좁은 화면에서는 2줄로: (이름 · 언어 버튼) / (메뉴) */
+  .header-inner {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding-block: 12px;
+  }
+
+  .site-name { order: 1; }
+  .lang-switch { order: 2; margin-inline-start: auto; }
+  .site-nav {
+    order: 3;
+    flex-basis: 100%;
+    flex-wrap: nowrap;
+    gap: 18px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding-block: 2px;
+    scrollbar-width: thin;
+  }
+  .site-nav a { flex: none; font-size: 16px; }
+  .lang-switch a { padding: 5px 12px; font-size: 14px; }
+
+  html { scroll-padding-top: 112px; }
+
+  .hero {
+    min-height: 0;
+    padding: 72px 0 64px;
+    text-align: start;
+  }
+  .eyebrow { font-size: 16px; margin-bottom: 14px; }
+  .lead { margin-inline: 0; margin-bottom: 32px; }
+  .hero-actions { justify-content: flex-start; }
+
+  .hero-signal {
+    grid-template-columns: 48px minmax(0, 1fr);
+    width: 100%;
+    margin: 40px 0 0;
+  }
+  .hero-signal-route,
+  .hero-signal-tag { padding-inline: 18px; }
+  .hero-signal-route { font-size: 13px; }
+  .hero-signal-route b { margin-inline: 8px; font-size: 18px; }
+  .hero-signal-tag {
+    grid-column: 2;
+    min-height: 38px;
+    border-block-start: 1px solid var(--line);
+    border-inline-start: 0;
+    font-size: 10px;
+  }
+
+  .statement, .lead { max-width: none; }
+
+  .section-eyebrow { font-size: 16px; }
+  .section-description { margin-bottom: 40px; }
+
+  .card { padding: 32px 28px; }
+  .card p, .project-summary { font-size: 17px; }
+  .project-archive { padding: 30px 28px; }
+  .archive-list { padding-top: 28px; }
+
+  .fact-list { margin-top: 48px; }
+  .fact-list li { padding: 24px 0 22px; }
+
+  .spec-list { margin-bottom: 64px; }
+  .spec-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 22px 0;
+  }
+  .subhead { margin-bottom: 24px; }
+
+  .project-meta {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    margin-top: 32px;
+    padding-top: 26px;
+  }
+  .project-meta dd { margin-bottom: 16px; }
+  .project-meta dd:last-child { margin-bottom: 0; }
+
+  .project-dashboard { margin-top: 28px; padding: 18px; }
+  .readiness-grid { grid-template-columns: 1fr; }
+  .readiness-grid li,
+  .readiness-grid li:nth-child(even) {
+    padding: 16px 0;
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .readiness-grid li:last-child { border-bottom: 0; }
+}
+
+/* ── 언어 전환 버튼 ────────────────────────────────────── */
+
+.lang-switch {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 980px;
+  background: rgba(120, 120, 128, 0.16);
+}
+
+.lang-switch a {
+  padding: 6px 15px;
+  border-radius: 980px;
+  color: var(--text);
+  font-size: 15px;
+  text-decoration: none;
+  opacity: 0.72;
+  white-space: nowrap;
+}
+.lang-switch a:hover { opacity: 1; }
+
+.lang-switch a[aria-current="page"] {
+  background: var(--card);
+  opacity: 1;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+/* ── 아랍어 페이지(오른쪽에서 왼쪽으로 읽는 방향) ──────── */
+
+/* 아랍어는 글자를 이어 쓰기 때문에 자간을 좁히면 모양이 깨집니다. */
+[lang="ar"] { letter-spacing: normal; }
+
+html[lang="ar"] body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Arabic", "Geeza Pro",
+               "Segoe UI", Tahoma, Arial, sans-serif;
+  line-height: 1.65;
+  letter-spacing: normal;
+  word-break: normal;
+}
+
+html[lang="ar"] h1,
+html[lang="ar"] h2,
+html[lang="ar"] h3,
+html[lang="ar"] .lead,
+html[lang="ar"] .statement,
+html[lang="ar"] .site-name,
+html[lang="ar"] .fact-value,
+html[lang="ar"] .spec-row dd,
+html[lang="ar"] .card .cert-name { letter-spacing: normal; }
+
+html[lang="ar"] h1 { line-height: 1.3; }
+html[lang="ar"] h2,
+html[lang="ar"] .statement { line-height: 1.38; max-width: 24ch; }
+html[lang="ar"] .lead { line-height: 1.5; max-width: 38ch; }
+html[lang="ar"] .card h3,
+html[lang="ar"] .project-card h3 { line-height: 1.42; }
+html[lang="ar"] .dashboard-heading p,
+html[lang="ar"] .dashboard-heading span,
+html[lang="ar"] .readiness-number,
+html[lang="ar"] .readiness-grid em { letter-spacing: normal; }
+
+/* ── 첫 화면 배경 그림과 움직임 ────────────────────────── */
+
+.hero { position: relative; overflow: hidden; isolation: isolate; }
+.hero > .container { position: relative; z-index: 2; }
+
+/* 지도 위에서도 제목이 또렷하게 읽히도록 글자 뒤를 부드럽게 밝힙니다. */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 62% 46% at 50% 42%, var(--bg) 0%, transparent 72%);
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hero-bg svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--text);
+}
+
+/* 지도는 실제 지리이므로 아랍어 페이지에서도 뒤집지 않습니다.
+   항구 이름은 라틴 문자라 방향을 왼쪽에서 오른쪽으로 고정합니다. */
+.hero-bg svg { direction: ltr; }
+
+.hero-bg .map {
+  color: var(--text);
+  opacity: 0.13;
+}
+
+.hero-bg .route {
+  stroke: var(--line-art);
+  stroke-width: 1.7;
+  opacity: 0.32;
+  stroke-dasharray: 5 7;
+}
+
+.hero-bg .spark {
+  stroke: var(--line-art);
+  stroke-width: 2.8;
+  opacity: 0.95;
+  stroke-dasharray: 30 970;
+  stroke-dashoffset: 1000;
+}
+
+.hero-bg .port {
+  fill: var(--copper-fill);
+  opacity: 0.7;
+}
+
+.hero-bg .port-star {
+  fill: none;
+  stroke: var(--copper-fill);
+  stroke-width: 1.7;
+  opacity: 0.75;
+}
+
+.hero-bg .port-ring {
+  fill: none;
+  stroke: var(--copper-fill);
+  stroke-width: 1.4;
+  opacity: 0.45;
+}
+
+.hero-bg .port-labels {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  opacity: 0.38;
+}
+
+/* 스크롤 진행 막대 — 지원하는 브라우저에서만 움직입니다. */
+.scroll-progress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 30;
+  width: 100%;
+  height: 3px;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--accent), var(--copper-fill));
+}
+[dir="rtl"] .scroll-progress { transform-origin: 100% 50%; }
+
+/* 실제 동작이 있는 요소에만 호버 움직임을 둡니다. */
+.button,
+.lang-switch a {
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+              box-shadow 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+              background-color 0.25s ease;
+}
+
+@media (hover: hover) {
+  .button:hover { transform: translateY(-2px); }
+}
+
+/* 움직임 줄이기를 켠 사용자에게는 애니메이션을 넣지 않습니다. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-bg .spark { animation: spark 11s linear infinite; }
+  .hero-bg .s2 { animation-delay: -4.4s; }
+  .hero-bg .s3 { animation-delay: -7.9s; }
+
+  .hero-bg .port-ring { animation: portPulse 3.4s ease-in-out infinite; }
+  .hero-bg .r2 { animation-delay: -1.7s; }
+
+  .hero .eyebrow,
+  .hero h1,
+  .hero .lead,
+  .hero .hero-actions {
+    animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .hero h1 { animation-delay: 0.07s; }
+  .hero .lead { animation-delay: 0.16s; }
+  .hero .hero-actions { animation-delay: 0.25s; }
+
+  @supports (animation-timeline: scroll()) {
+    .scroll-progress {
+      animation: progress linear;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+@keyframes spark {
+  from { stroke-dashoffset: 1000; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes portPulse {
+  0%, 100% { r: 9;  opacity: 0.45; }
+  50%      { r: 17; opacity: 0; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes progress {
+  to { transform: scaleX(1); }
+}
+
+/* 좁은 화면에서는 배경 그림이 본문 글자와 겹치므로 더 옅게 둡니다.
+   (배경 규칙보다 뒤에 있어야 적용됩니다) */
+@media (max-width: 700px) {
+  .hero-bg .map { opacity: 0.085; }
+  .hero-bg .route { opacity: 0.2; }
+  .hero-bg .spark { display: none; }
+  .hero-bg .port { opacity: 0.35; }
+  .hero-bg .port-star { opacity: 0.45; }
+  .hero-bg .port-ring { animation: none; opacity: 0.28; }
+  .hero-bg .port-labels { opacity: 0.25; font-size: 11px; }
+}
