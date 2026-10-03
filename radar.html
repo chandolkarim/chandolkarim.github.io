@@ -1,0 +1,880 @@
+<meta charset="utf-8">
+<title>Maritime Opportunity Radar</title>
+<style>
+:root{
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f0f0f2; --line:rgba(60,60,67,.18); --line-strong:rgba(60,60,67,.32); --sea-1:#ffffff; --sea-2:#f0f0f2; --dots:#2c2c2e;
+  --ink:#2c2c2e; --ink-2:#48484a; --ink-3:#6b6b70;
+  --accent:#0071e3; --accent-soft:rgba(0,113,227,.12); --accent-ink:#0066cc;
+  --ok:#1E7A4B; --ok-soft:#DDF2E5; --warn:#A35F00; --warn-soft:#FBEBD0;
+  --hold:#6b6b70; --hold-soft:#f0f0f2; --bad:#A3302B; --bad-soft:#F8E0DE;
+  --conf:#7A4FA3; --conf-soft:#EDE3F6;
+  --ar:#9a522c; --ar-soft:rgba(154,82,44,.11);
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#1c1c1e; --surface:#2c2c2e; --surface-2:#3a3a3c; --line:rgba(255,255,255,.18); --line-strong:rgba(255,255,255,.32); --sea-1:#1c1c1e; --sea-2:#2c2c2e; --dots:#f2f2f7;
+  --ink:#f2f2f7; --ink-2:#d1d1d6; --ink-3:#aeaeb2;
+  --accent:#5aabff; --accent-soft:rgba(90,171,255,.18); --accent-ink:#8cc4ff;
+  --ok:#5CC98A; --ok-soft:#1c3a2a; --warn:#E8A94A; --warn-soft:#3d2e12;
+  --hold:#aeaeb2; --hold-soft:#3a3a3c; --bad:#F08A84; --bad-soft:#42211f;
+  --conf:#C09BE6; --conf-soft:#332647;
+  --ar:#efb17a; --ar-soft:rgba(239,177,122,.16);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --bg:#1c1c1e; --surface:#2c2c2e; --surface-2:#3a3a3c; --line:rgba(255,255,255,.18); --line-strong:rgba(255,255,255,.32); --sea-1:#1c1c1e; --sea-2:#2c2c2e; --dots:#f2f2f7;
+  --ink:#f2f2f7; --ink-2:#d1d1d6; --ink-3:#aeaeb2;
+  --accent:#5aabff; --accent-soft:rgba(90,171,255,.18); --accent-ink:#8cc4ff;
+  --ok:#5CC98A; --ok-soft:#1c3a2a; --warn:#E8A94A; --warn-soft:#3d2e12;
+  --hold:#aeaeb2; --hold-soft:#3a3a3c; --bad:#F08A84; --bad-soft:#42211f;
+  --conf:#C09BE6; --conf-soft:#332647;
+  --ar:#efb17a; --ar-soft:rgba(239,177,122,.16);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.55 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,sans-serif;padding-block:0 32px;padding-inline:16px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto}
+
+/* hero: 점 지도 + LNG 항로 (부산 → 싱가포르 → 라스라판) */
+.hero{position:relative;min-height:340px;display:grid;grid-template-columns:minmax(0,560px) 1fr;align-items:center;padding:28px 28px 26px;margin:14px 0 0;border-radius:28px;overflow:hidden;background:var(--sea-1);border:1px solid var(--line);box-shadow:var(--shadow)}
+.hero .brand{position:relative;z-index:1}
+.hero .lane{position:absolute;inset:0;z-index:0;border:0;border-radius:0;box-shadow:none;background:none;aspect-ratio:auto}
+.hero .lane::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--sea-1) 0%,color-mix(in srgb,var(--sea-1) 75%,transparent) 36%,transparent 54%);z-index:1;pointer-events:none}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;min-height:0;padding:20px 18px}
+  .hero .lane{position:relative;inset:auto;aspect-ratio:2/1;margin-top:16px;border-radius:22px;background:var(--sea-2);border:1px solid var(--line)}
+  .hero .lane::before{display:none}
+}
+.brand .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ar);font-weight:600}
+.brand h1{margin:6px 0 8px;font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+.brand p{margin:0;color:var(--ink-2);font-size:14px;max-width:56ch}
+.brand .signal{display:inline-flex;align-items:center;gap:10px;margin-top:14px;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.brand .signal b{color:var(--accent);font-size:16px;line-height:1}
+.demo-flag{display:inline-flex;align-items:center;gap:6px;background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:500;margin-top:14px}
+.lane{position:relative;aspect-ratio:7/4;max-width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,var(--sea-1),var(--sea-2));box-shadow:var(--shadow);border:1px solid var(--line)}
+.lane svg{display:block;width:100%;height:100%;direction:ltr}
+.lane .map{color:var(--dots);opacity:.13}
+.lane .route{stroke:var(--accent);stroke-width:1.7;opacity:.32;stroke-dasharray:5 7;fill:none;stroke-linecap:round}
+.lane .route.alt{stroke-width:1.2;opacity:.2;stroke-dasharray:3 6}
+.lane .port.lack{fill:none;stroke:var(--ar);stroke-width:1.2;stroke-dasharray:2 2;opacity:.6}
+.lane .spark{stroke:var(--accent);stroke-width:2.6;opacity:.9;fill:none;stroke-linecap:round;stroke-dasharray:28 972;stroke-dashoffset:1000}
+.lane .port{fill:var(--ar);opacity:.85}
+.lane .port-ring{fill:none;stroke:var(--ar);stroke-width:1.3;opacity:.5}
+.lane .port-star{fill:none;stroke:var(--ar);stroke-width:1.6;opacity:.85}
+.lane .lbl{fill:var(--ink);font-size:12px;font-weight:600;letter-spacing:.22em;opacity:.38;font-family:inherit}
+.lane .lbl.sub{font-size:9px;letter-spacing:.14em;opacity:.4}
+.lane .ship .hull{fill:var(--accent)}
+.lane .ship .tank{fill:var(--surface);stroke:var(--accent);stroke-width:.8}
+.lane .ship .wake{stroke:var(--accent);stroke-width:1;opacity:.35;fill:none;stroke-dasharray:2 3}
+.lane .cap{position:absolute;right:16px;bottom:12px;z-index:2;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;display:flex;gap:10px;align-items:center}
+.lane .cap i{display:inline-block;width:14px;height:0;border-top:2px dashed var(--accent);opacity:.6}
+@media (prefers-reduced-motion:no-preference){
+  .lane .spark{animation:spark 12s linear infinite}
+  .lane .s2{animation-delay:-5.2s}
+  .lane .port-ring{animation:portPulse 3.4s ease-in-out infinite}
+  .lane .r2{animation-delay:-1.7s}
+}
+@keyframes spark{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
+@keyframes portPulse{0%,100%{r:9;opacity:.5}50%{r:17;opacity:0}}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;margin-top:16px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;color:var(--ink-2);white-space:nowrap;font-weight:500}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tab .n{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:9px;background:var(--surface-2);color:var(--ink-3);font-size:11px;text-align:center}
+.screen[hidden]{display:none}
+
+/* panel */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.panel h3{margin:0;padding:10px 14px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.panel.demo{border:1px dashed color-mix(in srgb,var(--warn) 55%,var(--line));background:color-mix(in srgb,var(--warn-soft) 35%,var(--surface));box-shadow:none}
+.panel.demo h3{color:var(--warn);border-bottom-style:dashed}
+.demo-tag{font-size:10px;letter-spacing:.04em;text-transform:none;background:var(--warn-soft);color:var(--warn);border-radius:3px;padding:2px 6px;font-weight:600}
+.panel .body{padding:12px 14px;display:grid;gap:12px}
+.field label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:4px}
+select,input[type=number],textarea{width:100%;font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--line-strong);border-radius:4px;padding:6px 8px}
+.btnrow{display:flex;flex-wrap:wrap;gap:6px}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;border-radius:999px;padding:7px 14px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px}
+.kv dt{color:var(--ink-3)}.kv dd{margin:0}
+.progress{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.queue{display:grid;gap:4px;font-size:12px}
+.queue div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px dashed var(--line)}
+.queue .mono{white-space:nowrap;font-size:11px}
+.queue .ttl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.queue .done{color:var(--ink-3)}
+.queue .skip{color:var(--ink-3);text-decoration:line-through}
+.queue .next{color:var(--accent);font-weight:600}
+
+/* status */
+.st{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:600;white-space:nowrap}
+.st::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.st.ok{background:var(--ok-soft);color:var(--ok)}
+.st.warn{background:var(--warn-soft);color:var(--warn)}
+.st.hold{background:var(--hold-soft);color:var(--hold)}
+.st.bad{background:var(--bad-soft);color:var(--bad)}
+.rule{font-family:"IBM Plex Mono",monospace;font-size:11px;background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--ink-2)}
+
+/* list cards */
+.cards{display:grid;gap:12px}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px 14px 22px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 18px;cursor:pointer;transition:border-color .15s;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--line-strong)}
+.card.s-ok::before{background:var(--ok)}.card.s-warn::before{background:var(--warn)}.card.s-hold::before{background:var(--hold)}.card.s-bad::before{background:var(--bad)}
+.card:hover{border-color:var(--accent)}
+.card.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.card .where{font-size:12px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.card .where b{color:var(--ink-2);font-weight:600;font-size:12.5px}
+.card .change{margin-top:5px;font-size:16px;font-weight:600;line-height:1.35;text-wrap:balance;letter-spacing:-.005em}
+.card .why{margin-top:8px;font-size:13px;color:var(--ink-2);display:flex;gap:8px;align-items:baseline}
+.card .why .lbl{flex:none;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding-top:2px}
+.card .meta{grid-column:1/-1;display:grid;gap:5px;font-size:12px;color:var(--ink-3);border-top:1px solid var(--line);padding-top:9px}
+.card .meta .row{display:flex;flex-wrap:wrap;gap:4px 16px}
+.card .meta .row span b{color:var(--ink-2);font-weight:500}
+.card .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.card .new{color:var(--accent);font-weight:500;line-height:1.45}
+.card .new::before{content:"↑ ";color:var(--accent)}
+/* 영역 스트립: 이름 + 상태 색 */
+.dom-strip{display:flex;gap:4px}
+.dom{display:inline-flex;align-items:center;gap:4px;font-size:11px;line-height:1;padding:4px 6px;border-radius:3px;border:1px solid var(--line);color:var(--ink-3);background:var(--surface-2);white-space:nowrap}
+.dom::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line-strong);flex:none}
+.dom.sup{color:var(--ok);border-color:transparent;background:var(--ok-soft)}.dom.sup::before{background:var(--ok)}
+.dom.neg{color:var(--bad);border-color:transparent;background:var(--bad-soft)}.dom.neg::before{background:var(--bad)}
+.dom.conf{color:var(--conf);border-color:transparent;background:var(--conf-soft)}.dom.conf::before{background:var(--conf)}
+.dom.lack::before{background:var(--line-strong)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--ink-3);margin:0 0 12px;padding:0 2px}
+.legend .k{display:inline-flex;align-items:center;gap:5px}
+.legend .k i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.legend .t{margin-right:auto;font-weight:500;color:var(--ink-2)}
+
+/* detail */
+.dhead{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px;display:grid;gap:10px}
+.dhead .row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.dhead h2{margin:0;font-size:18px;font-weight:600;text-wrap:balance}
+.dhead .sub{color:var(--ink-2);font-size:13px}
+.verdict{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.verdict .reason{color:var(--ink-2)}
+.domains{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+@media (max-width:700px){.domains{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.domain{border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:var(--surface-2);display:grid;gap:3px}
+.domain .q{font-size:11px;color:var(--ink-3)}
+.domain .nm{font-weight:600;font-size:13px}
+.domain .ds{font-size:12px;font-weight:600}
+.domain.sup{border-left:3px solid var(--ok)}.domain.sup .ds{color:var(--ok)}
+.domain.neg{border-left:3px solid var(--bad)}.domain.neg .ds{color:var(--bad)}
+.domain.lack{border-left:3px solid var(--line-strong)}.domain.lack .ds{color:var(--ink-3)}
+.domain.conf{border-left:3px solid var(--conf)}.domain.conf .ds{color:var(--conf)}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.col h4{margin:0;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.col h4 .n{color:var(--ink-3);font-weight:400;font-size:12px}
+.col.pos h4{border-top:3px solid var(--ok)}.col.neg h4{border-top:3px solid var(--bad)}.col.unk h4{border-top:3px solid var(--warn)}
+.ev-list{display:grid;gap:1px;padding:6px}
+.ev{display:grid;gap:4px;padding:8px 8px;border-radius:4px;text-align:left;border:0;background:none;width:100%}
+.ev:hover{background:var(--surface-2)}
+.ev .ko{font-size:13px}
+.ev .tags{display:flex;flex-wrap:wrap;gap:4px;font-size:11px;color:var(--ink-3)}
+.tag{border:1px solid var(--line);border-radius:3px;padding:0 5px;background:var(--surface)}
+.tag.ar{background:var(--ar-soft);color:var(--ar);border-color:transparent;font-weight:600}
+.tag.dup{color:var(--ink-3);border-style:dashed}
+.tag.interp{color:var(--conf);border-color:color-mix(in srgb,var(--conf) 40%,transparent)}
+.tag.excl{background:var(--bad-soft);color:var(--bad);border-color:transparent;font-weight:600}
+.tag.fail{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.tag.after{background:var(--hold-soft);color:var(--hold);border-color:transparent}
+.empty{padding:16px 14px;color:var(--ink-3);font-size:13px}
+.unk-item{padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px}
+.unk-item:last-child{border-bottom:0}
+.unk-item .dm{font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+.unk-item .who{margin-top:3px;color:var(--ink-2);font-size:12px}
+.fit{display:flex;gap:10px;align-items:center;font-size:13px;flex-wrap:wrap}
+.fit .lvl{display:inline-flex;gap:0;border:1px solid var(--line-strong);border-radius:4px;overflow:hidden}
+.fit .lvl span{padding:2px 8px;font-size:12px;color:var(--ink-3)}
+.fit .lvl span.on{background:var(--accent);color:#fff;font-weight:600}
+.trig{background:var(--hold-soft);border-radius:4px;padding:8px 10px;font-size:12.5px;color:var(--hold)}
+.override-box{margin-top:12px;border:1px dashed var(--line-strong);border-radius:6px;background:var(--surface)}
+.override-box summary{cursor:pointer;padding:10px 14px;font-size:13px;font-weight:500;color:var(--ink-2);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.override-box summary span{font-weight:400;font-size:12px;color:var(--ink-3)}
+.override-box[open] summary{border-bottom:1px solid var(--line)}
+.override{display:grid;gap:6px;padding:10px 14px}
+.override .row{display:flex;gap:6px;flex-wrap:wrap}
+.override select{width:auto}
+
+/* research */
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);background:var(--surface-2);font-weight:600}
+tr:last-child td{border-bottom:0}
+.tbl-wrap{overflow-x:auto}
+
+/* history */
+.hist{display:grid;gap:0;position:relative}
+.h-item{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.h-item.major{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin:6px 0;box-shadow:var(--shadow)}
+.h-item.major .ch .st{font-size:13px;padding:3px 10px}
+.h-item.minor{padding:7px 0 7px 16px;grid-template-columns:150px minmax(0,1fr);opacity:.78}
+.h-item.minor .h-time{font-size:11px}
+.h-item.minor .ch{font-size:12.5px}
+.h-item.minor .st{font-size:11px;padding:1px 6px}
+.h-tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:12.5px;color:var(--ink-2);margin-bottom:10px}
+.h-tools label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+@media (max-width:640px){.h-item{grid-template-columns:1fr}}
+.h-time{font-size:12px;color:var(--ink-3);display:grid;gap:2px}
+.h-time b{color:var(--ink-2);font-weight:500}
+.h-body{display:grid;gap:5px}
+.h-body .ch{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.h-body .arrow{color:var(--ink-3)}
+.h-body .src{font-size:12.5px;color:var(--ink-2)}
+.h-body .src b{font-weight:500;color:var(--ink)}
+.h-note{font-size:12px;color:var(--ink-3)}
+.h-manual{border-left:3px solid var(--warn);padding-left:10px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(10,20,28,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal{background:var(--surface);border-radius:8px;max-width:640px;width:100%;max-height:90vh;overflow:auto;box-shadow:var(--shadow);border:1px solid var(--line)}
+.modal header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.modal header h4{margin:0;font-size:15px;text-wrap:balance}
+.modal .x{border:0;background:none;font-size:20px;line-height:1;color:var(--ink-3);padding:0 4px}
+.modal .sec{padding:12px 18px;border-bottom:1px solid var(--line);display:grid;gap:6px}
+.modal .sec:last-child{border-bottom:0}
+.modal .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.quote{background:var(--surface-2);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 4px 4px 0;font-size:13.5px}
+.quote[dir=rtl]{font-size:15px;border-left:0;border-right:3px solid var(--ar);border-radius:4px 0 0 4px;text-align:right}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px}
+.chk .ok{color:var(--ok);font-weight:600}.chk .no{color:var(--bad);font-weight:600}
+.foot{margin-top:28px;color:var(--ink-3);font-size:12px;line-height:1.6;border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="brand">
+    <div class="eyebrow">Opportunity Evidence Engine · 프로토타입 v0.3</div>
+    <h1>AI Maritime Opportunity Radar</h1>
+    <p>구조는 국가·선종 무관, 1차 적용은 걸프·아랍권 LNG운반선 신조 — 근거·반대 근거·미확인 사항을 함께 관리하는 검토 목록</p>
+    <div class="signal">Korea <b aria-hidden="true">↔</b> Gulf LNG</div>
+    <div><span class="demo-flag">⚠ 시연용 예시 자료 — 모든 원문은 가상·재구성이며 실제 자료 확보 후 교체</span></div>
+  </div>
+  <div class="lane" aria-hidden="true">
+    <svg viewBox="400 400 800 400" preserveAspectRatio="xMaxYMid meet" focusable="false" id="lane-svg">
+      <defs>
+        <pattern id="mapdots" width="13" height="13" patternUnits="userSpaceOnUse"><circle cx="6.5" cy="6.5" r="2.1" fill="currentColor"/></pattern>
+        <clipPath id="land"><path clip-rule="evenodd" d="M115 473L115 430L166 430L173 408L151 394L180 387L209 372L230 358L245 351L238 329L252 329L274 351L317 344L331 336L353 322L382 308L367 300L338 308L331 286L360 272L331 264L353 236L382 228L468 250L540 243L612 236L677 214L734 221L756 207L828 192L900 185L972 207L1044 214L1116 221L1188 214L1260 221L1332 236L1404 243L1440 250L1440 272L1418 293L1368 308L1346 322L1296 329L1260 358L1224 380L1210 401L1188 416L1152 423L1130 430L1116 437L1109 466L1109 488L1087 488L1087 473L1058 452L1044 466L1051 488L1044 509L1058 516L1051 538L1030 560L1001 574L972 588L958 610L943 624L958 660L943 675L922 668L900 646L886 668L900 689L922 732L900 696L886 682L886 646L864 624L857 596L842 588L821 581L806 588L785 603L756 632L756 668L734 682L727 660L706 632L698 596L677 581L662 567L641 560L619 560L590 560L590 545L576 552L554 545L540 531L526 524L526 531L533 545L554 560L576 567L590 574L583 596L562 617L533 646L504 646L490 646L490 624L482 610L461 588L446 567L432 538L425 524L425 516L439 502L439 480L425 480L410 480L396 473L374 473L367 466L367 452L353 444L346 452L353 466L346 466L331 466L317 452L310 437L295 430L274 416L274 423L288 437L295 444L310 452L295 466L288 466L266 437L252 423L238 423L216 430L202 430L180 452L166 473L144 480L137 473ZM382 444L403 416L446 401L475 430L468 444L439 444L418 437L389 444ZM518 416L562 416L569 444L554 473L533 466L518 444ZM58 632L65 653L86 675L115 696L144 704L180 704L202 696L223 711L245 711L245 725L252 740L274 768L266 783L274 804L266 833L274 862L288 898L302 941L317 984L338 984L360 984L382 970L403 948L418 927L432 905L432 884L468 855L475 826L461 790L461 776L475 754L490 740L511 718L533 696L547 668L526 653L497 660L490 653L461 632L446 610L432 581L425 538L410 524L410 516L360 509L324 516L288 509L259 502L252 473L238 473L202 480L180 480L166 488L144 480L137 495L115 502L108 524L86 545L65 581ZM144 380L158 372L187 372L180 358L173 351L158 344L144 322L137 329L144 351L151 358ZM108 365L137 365L137 344L108 351ZM7 272L79 264L79 279L22 286ZM1116 509L1145 495L1166 488L1188 480L1195 452L1202 437L1195 416L1217 430L1202 452L1188 466L1166 473L1152 495L1130 502ZM1044 581L1058 560L1051 560ZM756 696L770 689L770 675L756 668ZM490 826L533 840L540 876L518 920L504 898L490 855ZM864 696L886 711L929 754L943 783L922 776L900 740ZM936 783L1001 797L1001 790L943 783ZM965 725L1022 711L1037 732L1022 761L972 761ZM1037 732L1080 732L1073 776L1044 776ZM1123 747L1195 761L1260 804L1238 812L1174 797ZM1044 639L1073 610L1087 639L1080 689L1058 696ZM994 898L1001 927L1015 970L1037 984L1087 970L1123 963L1152 992L1174 992L1195 1013L1231 1020L1260 1006L1282 970L1282 934L1253 891L1231 876L1202 819L1166 826L1130 819L1116 833L1080 840L1051 869L1015 884Z"/></clipPath>
+        <path id="lane-path" d="M1109 487C1080 610 1010 700 927 730C820 770 660 660 566 552"/>
+        <path id="lane-oman" d="M927 730C830 760 690 690 604 588"/>
+        <path id="lane-egypt" d="M604 588C560 610 470 600 414 524C411 520 408 517 405 514"/>
+      </defs>
+      <g class="map" clip-path="url(#land)"><rect x="-260" y="-60" width="1960" height="1500" fill="url(#mapdots)"/></g>
+      <use href="#lane-oman" class="route alt"/>
+      <use href="#lane-egypt" class="route alt"/>
+      <use href="#lane-path" class="route"/>
+      <use href="#lane-path" class="spark s1"/>
+      <use href="#lane-path" class="spark s2"/>
+      <g class="ports">
+        <circle class="port" cx="927" cy="730" r="3.4"/>
+        <circle class="port" cx="604" cy="588" r="3.4"/>
+        <circle class="port" cx="405" cy="514" r="3.4"/>
+        <circle class="port lack" cx="452" cy="578" r="3.4"/>
+        <circle class="port-ring" cx="1109" cy="487" r="10"/>
+        <circle class="port-ring r2" cx="566" cy="552" r="10"/>
+        <g class="port-star" transform="translate(1109 487)"><rect x="-5" y="-5" width="10" height="10"/><path d="M0 -7.2 7.2 0 0 7.2 -7.2 0Z"/></g>
+        <g class="port-star" transform="translate(566 552)"><rect x="-5" y="-5" width="10" height="10"/><path d="M0 -7.2 7.2 0 0 7.2 -7.2 0Z"/></g>
+      </g>
+      <g text-anchor="middle">
+        <text class="lbl" x="1109" y="470">BUSAN</text>
+        <text class="lbl sub" x="1109" y="458">HD KSOE · ULSAN</text>
+        <text class="lbl" x="927" y="757">SINGAPORE</text>
+        <text class="lbl" x="566" y="535">RAS LAFFAN</text>
+        <text class="lbl sub" x="632" y="566">HORMUZ</text>
+        <text class="lbl sub" x="604" y="610">SUR · OMAN</text>
+        <text class="lbl sub" x="405" y="500">DAMIETTA · EGYPT</text>
+        <text class="lbl sub" x="452" y="598">YANBU · KSA</text>
+        <text class="lbl sub" x="566" y="523">QATAR · UAE RUWAIS</text>
+      </g>
+      <g class="ship">
+        <animateMotion dur="16s" repeatCount="indefinite" rotate="auto" calcMode="linear"><mpath href="#lane-path"/></animateMotion>
+        <g transform="scale(1.7)">
+          <path class="wake" d="M-16 0 H-30"/>
+          <path class="hull" d="M15 0 L8 -4.2 L-13 -4.2 L-13 4.2 L8 4.2 Z"/>
+          <circle class="tank" cx="-9" cy="0" r="2.5"/><circle class="tank" cx="-3.5" cy="0" r="2.5"/><circle class="tank" cx="2" cy="0" r="2.5"/><circle class="tank" cx="7.5" cy="0" r="2.5"/>
+        </g>
+      </g>
+    </svg>
+    <div class="cap"><i></i> LNG 항로 · 부산 → 싱가포르 → 라스라판 · 비교: 수르 · 다미에타</div>
+  </div>
+</header>
+
+<div class="layout">
+<main>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-screen="list" aria-selected="true">화면 1 · 검토 목록 <span class="n" id="n-list">0</span></button>
+    <button class="tab" role="tab" data-screen="detail">화면 2 · 기회 상세</button>
+    <button class="tab" role="tab" data-screen="research">화면 3 · 추가 조사 목록 <span class="n" id="n-research">0</span></button>
+    <button class="tab" role="tab" data-screen="history">화면 4 · 상태 변경 이력 <span class="n" id="n-history">0</span></button>
+  </div>
+  <section class="screen" id="screen-list"><div class="legend" id="legend"></div><div class="cards" id="cards"></div></section>
+  <section class="screen" id="screen-detail" hidden></section>
+  <section class="screen" id="screen-research" hidden></section>
+  <section class="screen" id="screen-history" hidden></section>
+</main>
+
+<aside>
+  <div class="panel demo">
+    <h3>시연 장치 · 자료 순차 입력 <span class="demo-tag">실제 서비스에는 없음</span></h3>
+    <div class="body">
+      <div class="field"><label for="opp-select">검토 사례</label><select id="opp-select"></select></div>
+      <dl class="kv" id="opp-kv"></dl>
+      <div class="progress"><i id="prog" style="width:0%"></i></div>
+      <div class="btnrow">
+        <button class="btn primary" id="btn-next">다음 자료 입력 →</button>
+        <button class="btn" id="btn-all">전체 입력</button>
+        <button class="btn" id="btn-reset">초기화</button>
+      </div>
+      <div class="queue" id="queue"></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:12px">
+    <h3>판정 설정값 (코드 설정)</h3>
+    <div class="body">
+      <div class="field"><label for="cfg-hold">R2 보류 기준 · 구매 결정 예상까지 (개월)</label><input type="number" id="cfg-hold" value="24" min="6" max="60" step="6"></div>
+      <div class="field"><label>R1 제외 유형 목록</label><div style="font-size:12px;color:var(--ink-2)" id="cfg-excl"></div></div>
+      <div style="font-size:11.5px;color:var(--ink-3)">규칙은 위에서부터 적용하고 처음 충족되는 규칙으로 상태를 정함. R1 제외 → R2 보류 → R3 우선 검토 → R4 추가 조사. 검토 상태는 AI가 아닌 규칙 코드가 결정.</div>
+    </div>
+  </div>
+</aside>
+</div>
+
+<p class="foot">이 프로토타입은 계획서 v0.2의 5·6·7·9·10장을 화면과 규칙 코드로 옮긴 것입니다. 분석 단위(국가 × 프로젝트·구매 주체 × 사업 유형 × 대상 기업)와 규칙 R1~R4는 지역·선종에 종속되지 않으며, 사례 E는 아랍어 원문 없이 영어 자료만으로 같은 엔진이 도는지 확인하는 확장 검증용입니다. 아랍어 원문 대조는 걸프 사례에서 추가 정보를 얻는 차별화 수단이지 엔진의 전제 조건이 아닙니다. 언어모델 호출(사건·근거 추출, 질문 작성)은 아직 연결하지 않았고, 추출 결과에 해당하는 근거 데이터를 사전 등록해 규칙 실행·화면·이력 흐름을 확인하는 단계입니다. 실제 구현에서는 Astro 서버 엔드포인트에서 구조화 출력 → 원문 문장 대조 → 규칙 실행 순서로 처리합니다.</p>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+/* ========== 설정값 (팀 합의로 관리) ========== */
+const CONFIG = {
+  holdMonths: 24,
+  exclusionTypes: ['해당 범위 발주 완료','사업 취소','선종·사양 범위 불일치'],
+};
+const DOMAINS = [
+  {id:'demand', nm:'수요', q:'어떤 운송 수요가 변화하는가?'},
+  {id:'gap',    nm:'공급 공백', q:'기존 선대·계약·기발주로 충당 가능한가?'},
+  {id:'buyer',  nm:'구매 주체·시점', q:'누가 언제 결정하는가?'},
+  {id:'fit',    nm:'기업 적합성', q:'대상 기업 공개 역량과 연결되는가?'},
+  {id:'counter',nm:'반대 근거·진입 제약', q:'기회를 약화·제외할 근거가 있는가?'},
+];
+const STATUS = {
+  priority:{label:'우선 검토', cls:'ok'},
+  research:{label:'추가 조사', cls:'warn'},
+  hold:    {label:'보류', cls:'hold'},
+  excluded:{label:'현재 범위에서 제외', cls:'bad'},
+};
+const DSTAT = { sup:'뒷받침됨', neg:'반대 근거 있음', lack:'자료 부족', conf:'자료 충돌' };
+
+/* ========== 원문 (시연용 가상 자료) ========== */
+// id, title, org, date=발표일, lang, originId(중복 판별), primary(원출처 여부), collectedAt(수집 순서용)
+const SOURCES = [
+  // ---- 사례 A: UAE 생산 확대 ----
+  {id:'a1', title:'ADNOC, 루와이스 LNG 프로젝트 최종투자결정 및 건설 착수 발표', org:'ADNOC (국영기업 발표)', date:'2024-06-12', lang:'en', originId:'A-ADNOC-2024-06', primary:true, url:'#', demo:true},
+  {id:'a1ar', title:'أدنوك تعلن قرار الاستثمار النهائي لمشروع الرويس للغاز الطبيعي المسال', org:'WAM 아랍어판', date:'2024-06-12', lang:'ar', originId:'A-ADNOC-2024-06', primary:true, url:'#', demo:true, arOnly:'아랍어판에만 참여 계약사 목록과 1차 트레인 목표 연도가 명시됨'},
+  {id:'a2', title:'루와이스 LNG 운송, ADNOC L&S가 맡을 가능성 — 업계 전망', org:'해외 업계지 (기사)', date:'2025-02-03', lang:'en', originId:'A-TRADE-2025-02', primary:false, url:'#', demo:true},
+  {id:'a3', title:'HD한국조선해양, 2025년 LNG운반선 인도 실적 및 수주 현황 공시', org:'HD한국조선해양 (공시)', date:'2025-12-30', lang:'ko', originId:'K-HD-2025-12', primary:true, url:'#', demo:true},
+  // ---- 사례 B: 카타르 선대 확장 (현재 기준일) ----
+  {id:'b0', title:'HD한국조선해양, 2023년 LNG운반선 인도 실적 공시', org:'HD한국조선해양 (공시)', date:'2023-12-28', lang:'ko', originId:'K-HD-2023-12', primary:true, url:'#', demo:true},
+  {id:'b1', title:'QatarEnergy, North Field West 확대로 LNG 생산능력 142 MTPA 목표 발표', org:'QatarEnergy (국영기업 발표)', date:'2024-02-25', lang:'en', originId:'Q-QE-2024-02', primary:true, url:'#', demo:true},
+  {id:'b1ar', title:'قطر للطاقة تعلن عن توسعة حقل الشمال الغربي', org:'QNA 아랍어판', date:'2024-02-25', lang:'ar', originId:'Q-QE-2024-02', primary:true, url:'#', demo:true, arOnly:'아랍어판에 운송 자회사 관련 언급이 한 문장 더 있음'},
+  {id:'b2', title:'QatarEnergy, 선대 확장 프로그램 총 128척 계약 완료 발표', org:'QatarEnergy (국영기업 발표)', date:'2024-12-10', lang:'en', originId:'Q-QE-2024-12', primary:true, url:'#', demo:true},
+  {id:'b3', title:'카타르, LNG선 128척 발주 마무리… 한국 조선 3사 대거 수주', org:'국내 경제지 (기사)', date:'2024-12-11', lang:'ko', originId:'Q-QE-2024-12', primary:false, url:'#', demo:true},
+  {id:'b4', title:'라스라판 피격으로 카타르 LNG 수출능력 약 17% 손실 전망 — 복구 수년 소요', org:'해외 통신 (보도)', date:'2026-03-20', lang:'en', originId:'Q-NEWS-2026-03a', primary:false, url:'#', demo:true},
+  {id:'b5', title:'호르무즈 해협 LNG선 통항 제한 지속, 재개 시점 불투명', org:'해외 통신 (보도)', date:'2026-03-28', lang:'en', originId:'Q-NEWS-2026-03b', primary:false, url:'#', demo:true},
+  // ---- 사례 C: 카타르 2020 재현 ----
+  {id:'c0', title:'현대중공업그룹, 2019년 LNG운반선 인도 실적', org:'회사 공시', date:'2019-12-27', lang:'ko', originId:'K-HHI-2019-12', primary:true, url:'#', demo:true},
+  {id:'c1', title:'Qatar Petroleum, North Field East 확대로 LNG 생산능력 110 MTPA 발표', org:'Qatar Petroleum (국영기업 발표)', date:'2019-11-25', lang:'en', originId:'Q-QP-2019-11', primary:true, url:'#', demo:true},
+  {id:'c1ar', title:'قطر للبترول تعلن زيادة الطاقة الإنتاجية إلى 110 مليون طن', org:'QNA 아랍어판', date:'2019-11-25', lang:'ar', originId:'Q-QP-2019-11', primary:true, url:'#', demo:true},
+  {id:'c2', title:'Qatar Petroleum, LNG선 최대 100척 이상 신조 확보 위한 입찰 초청 발표', org:'Qatar Petroleum (국영기업 발표)', date:'2019-04-23', lang:'en', originId:'Q-QP-2019-04', primary:true, url:'#', demo:true},
+  {id:'c3', title:'Qatar Petroleum, 한국 조선 3사와 LNG선 건조 슬롯 예약 계약 체결', org:'Qatar Petroleum (국영기업 발표)', date:'2020-06-01', lang:'en', originId:'Q-QP-2020-06', primary:true, url:'#', demo:true},
+  // ---- 사례 E: 확장 검증 (비아랍권, 영어 원문만) ----
+  {id:'e1', title:'US Gulf Coast LNG Phase 2, 최종투자결정 — 13 MTPA, 2029년 첫 카고 목표', org:'프로젝트 사업자 (발표)', date:'2025-05-14', lang:'en', originId:'US-DEV-2025-05', primary:true, url:'#', demo:true},
+  {id:'e2', title:'유럽 유틸리티, Phase 2 물량 20년 장기 구매계약(FOB) 체결 — 운송은 구매자 책임', org:'구매자 (공시)', date:'2025-09-02', lang:'en', originId:'EU-UTIL-2025-09', primary:true, url:'#', demo:true},
+  {id:'e3', title:'유럽 유틸리티, 신조 LNG선 4척 장기 용선 계약 — 그리스 선주 발주분(중국 조선소 건조)', org:'선주 (발표)', date:'2026-01-20', lang:'en', originId:'GR-OWNER-2026-01', primary:true, url:'#', demo:true},
+  {id:'e4', title:'LNG 프로젝트 운송 수요, 유럽 구매자 선대 확보 경쟁 가열 — 업계 분석', org:'해외 업계지 (기사)', date:'2026-02-03', lang:'en', originId:'GR-OWNER-2026-01', primary:false, url:'#', demo:true},
+  // ---- 사례 F: 오만 (호르무즈 밖) ----
+  {id:'f1', title:'Oman LNG, 칼하트 기지 생산능력 확대(디보틀네킹) 완료 목표 발표', org:'Oman LNG (국영기업 발표)', date:'2025-06-18', lang:'en', originId:'OM-OLNG-2025-06', primary:true, url:'#', demo:true},
+  {id:'f1ar', title:'العمانية للغاز الطبيعي المسال تعلن رفع الطاقة الإنتاجية لمجمع قلهات', org:'ONA 아랍어판', date:'2025-06-18', lang:'ar', originId:'OM-OLNG-2025-06', primary:true, url:'#', demo:true, arOnly:'아랍어판에만 완공 목표 분기와 추가 물량 판매처 협의 상대가 명시됨'},
+  {id:'f2', title:'오만 LNG 수출, 호르무즈 통항 제한 기간에도 정상 선적 지속', org:'오만 에너지광물부 (발표)', date:'2026-04-09', lang:'en', originId:'OM-MEM-2026-04', primary:true, url:'#', demo:true},
+  {id:'f3', title:'오만 추가 LNG 물량 운송, 국영 ASYAD 선대 활용 검토 — 업계 전망', org:'해외 업계지 (기사)', date:'2026-05-22', lang:'en', originId:'OM-TRADE-2026-05', primary:false, url:'#', demo:true},
+  // ---- 사례 G: 이집트 (수요 방향 반전) ----
+  {id:'g1', title:'이집트, 가스 생산 감소로 LNG 수출 중단 및 FSRU 임차를 통한 수입 전환 발표', org:'이집트 석유부 / EGAS (발표)', date:'2024-07-30', lang:'en', originId:'EG-EGAS-2024-07', primary:true, url:'#', demo:true},
+  {id:'g1ar', title:'وزارة البترول: التعاقد على وحدة تغويز عائمة لتأمين احتياجات السوق المحلي', org:'국가정보청(SIS) 아랍어판', date:'2024-07-30', lang:'ar', originId:'EG-EGAS-2024-07', primary:true, url:'#', demo:true, arOnly:'아랍어판에 임차 기간(년)과 척수가 명시됨 — 영어판은 "장기"로만 표기'},
+  {id:'g2', title:'다미에타 LNG 수출 재개 가능성 — 동지중해 신규 가스전 공급 시', org:'해외 업계지 (기사)', date:'2025-11-12', lang:'en', originId:'EG-TRADE-2025-11', primary:false, url:'#', demo:true},
+  // ---- 사례 H: 사우디 (확인된 수출 프로젝트 없음) ----
+  {id:'h1', title:'사우디, LNG 수출 진출 가능성 관측 — 해외 LNG 자산 지분 투자 이어져', org:'해외 업계지 (기사)', date:'2026-02-17', lang:'en', originId:'SA-TRADE-2026-02', primary:false, url:'#', demo:true},
+  // ---- 사례 D: 보류 ----
+  {id:'d1', title:'QatarEnergy, North Field South 후속 단계 LNG 생산 일정 발표', org:'QatarEnergy (국영기업 발표)', date:'2025-09-15', lang:'en', originId:'Q-QE-2025-09', primary:true, url:'#', demo:true},
+];
+const S = Object.fromEntries(SOURCES.map(s=>[s.id,s]));
+
+/* ========== 근거 (AI 추출 결과에 해당, 사전 등록) ========== */
+// dir: '+' 긍정 / '-' 반대 · kind: fact/interp · excl: 제외 유형 · verified: 원문 문장 대조 결과
+const EVIDENCE = [
+  // A
+  {id:'ea1', src:'a1', opp:'A', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'The Ruwais LNG project will have a capacity of 9.6 mtpa across two trains, with first production targeted for 2028.',
+    ko:'루와이스 LNG는 2개 트레인 총 9.6 MTPA 규모, 2028년 첫 생산 목표.'},
+  {id:'ea1ar', src:'a1ar', opp:'A', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'ويشمل المشروع خطي إنتاج بطاقة إجمالية 9.6 مليون طن سنوياً، مع بدء الإنتاج في عام 2028.',
+    ko:'(아랍어 원문) 동일 발표. 아랍어판에는 EPC 참여사 명단이 추가로 포함됨 — 영어판 재확인 필요.'},
+  {id:'ea2', src:'a2', opp:'A', domain:'buyer', dir:'+', kind:'interp', verified:true,
+    quote:'Industry sources expect ADNOC L&S to take a leading role in shipping arrangements for Ruwais volumes.',
+    ko:'업계는 ADNOC L&S가 운송을 주도할 것으로 전망 — 해석. 공식 확인 없음.'},
+  {id:'ea3', src:'a3', opp:'A', domain:'fit', dir:'+', kind:'fact', verified:true,
+    quote:'당기 LNG운반선 174K급 12척 인도, 누적 인도 실적 200척 이상.',
+    ko:'174K급 LNG운반선 인도 실적 확인 — 공개 역량상 선종 연결 가능.'},
+  // B
+  {id:'eb0', src:'b0', opp:'B', domain:'fit', dir:'+', kind:'fact', verified:true,
+    quote:'당기 LNG운반선 174K급 인도 및 카타르 프로젝트 물량 건조 진행 중.',
+    ko:'174K급 건조 실적 및 카타르 물량 진행 중 — 선종 연결 가능.'},
+  {id:'eb1', src:'b1', opp:'B', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'The North Field West project will raise Qatar\'s LNG production capacity to 142 mtpa before the end of 2030.',
+    ko:'North Field West로 2030년 전 142 MTPA — 생산 확대 계획 확인.'},
+  {id:'eb1ar', src:'b1ar', opp:'B', domain:'buyer', dir:'+', kind:'fact', verified:true,
+    quote:'وستتولى الشركة عبر ذراعها للنقل البحري ترتيبات الشحن للكميات الإضافية.',
+    ko:'(아랍어 원문) 추가 물량의 운송은 자사 해운 자회사가 맡는다 — 구매 주체 단서. 영어판에는 없는 문장.'},
+  {id:'eb2', src:'b2', opp:'B', domain:'counter', dir:'-', kind:'fact', verified:true, excl:'해당 범위 발주 완료',
+    quote:'With this final batch, the historic LNG fleet expansion programme is concluded with a total of 128 vessels.',
+    ko:'선대 확장 프로그램 128척으로 종결 — 이 범위의 신조 발주는 완료됨.'},
+  {id:'eb3', src:'b3', opp:'B', domain:'counter', dir:'-', kind:'fact', verified:true, excl:'해당 범위 발주 완료',
+    quote:'카타르에너지는 128척 규모 발주를 마무리했다고 밝혔다.',
+    ko:'동일 원출처(Q-QE-2024-12) 재인용 — 독립 증거로 계산하지 않음.'},
+  {id:'eb4', src:'b4', opp:'B', domain:'demand', dir:'-', kind:'interp', verified:true,
+    quote:'Analysts estimate the Ras Laffan damage removes roughly 17% of export capacity for several years.',
+    ko:'라스라판 피해로 수출능력 약 17% 수년 손실 추정 — 보도 기반 해석. 발표기관 원문 미확인.'},
+  {id:'eb5', src:'b5', opp:'B', domain:'counter', dir:'-', kind:'fact', verified:true, trigger:'호르무즈 해협 LNG선 통항 재개',
+    quote:'LNG carrier transits through the Strait of Hormuz remain suspended, with no confirmed date for resumption.',
+    ko:'통항 제한 지속 — 제외 사유는 아니나 우선 검토를 막는 반대 근거. 재검토 트리거 등록.'},
+  {id:'eb5b', src:'b4', opp:'B', domain:'counter', dir:'-', kind:'fact', verified:false, trigger:'라스라판 시설 복구 완료',
+    quote:'Qatar has cancelled all pending shipbuilding tenders indefinitely.',
+    ko:'⚠ 원문 대조 실패 — 원문에 없는 문장. 폐기 및 검증 실패로 기록.'},
+  // C (기준일 2020-03-31)
+  {id:'ec0', src:'c0', opp:'C', domain:'fit', dir:'+', kind:'fact', verified:true,
+    quote:'당기 LNG운반선 174K급 다수 인도, 대형 LNG선 건조 실적 보유.',
+    ko:'174K급 건조 실적 확인 — 선종 연결 가능.'},
+  {id:'ec1', src:'c1', opp:'C', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'Qatar Petroleum announced an increase in LNG production capacity from 77 to 110 mtpa by 2024.',
+    ko:'77 → 110 MTPA 확대 (2024년 목표) — 수요 변화 확인.'},
+  {id:'ec1ar', src:'c1ar', opp:'C', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'أعلنت قطر للبترول زيادة الطاقة الإنتاجية من 77 إلى 110 مليون طن سنوياً بحلول 2024.',
+    ko:'(아랍어 원문) 동일 발표, 동일 원출처 — 중복 계산 없음.'},
+  {id:'ec2', src:'c2', opp:'C', domain:'gap', dir:'+', kind:'fact', verified:true,
+    quote:'QP invited shipbuilders to tender for the construction of more than 100 LNG carriers over the next decade to meet expansion requirements.',
+    ko:'기존 선대로 충당 불가 → 100척 이상 신조 확보 입찰 — 공급 공백 확인.'},
+  {id:'ec2b', src:'c2', opp:'C', domain:'buyer', dir:'+', kind:'fact', verified:true,
+    quote:'Qatar Petroleum will lead the fleet acquisition programme on behalf of its LNG ventures.',
+    ko:'QP가 선박 확보 프로그램 직접 주관 — 구매 주체·시점 확인.'},
+  {id:'ec3', src:'c3', opp:'C', domain:'counter', dir:'-', kind:'fact', verified:true, excl:'해당 범위 발주 완료',
+    quote:'QP signed agreements reserving LNG ship construction capacity with three Korean shipbuilders.',
+    ko:'기준일(2020-03-31) 이후 자료 — 판정 입력에서 제외. 실제 결과 비교용으로만 보관.'},
+  // E (영어 원문만 — 아랍어 없이 같은 규칙으로 판정되는지 확인)
+  {id:'ee0', src:'a3', opp:'E', domain:'fit', dir:'+', kind:'fact', verified:true,
+    quote:'당기 LNG운반선 174K급 12척 인도, 누적 인도 실적 200척 이상.',
+    ko:'174K급 인도 실적 — 선종 연결 가능. (사례 A와 같은 원문을 재사용)'},
+  {id:'ee1', src:'e1', opp:'E', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'The Phase 2 expansion adds 13 mtpa of liquefaction capacity, with first cargo targeted for 2029.',
+    ko:'13 MTPA 추가, 2029년 첫 카고 — 수요 변화 확인.'},
+  {id:'ee2', src:'e2', opp:'E', domain:'buyer', dir:'+', kind:'fact', verified:true,
+    quote:'The 20-year SPA is on an FOB basis; the buyer is responsible for shipping arrangements.',
+    ko:'FOB 계약 — 선박 확보 결정 주체는 미국 사업자가 아니라 유럽 구매자. 수요국과 구매 주체국이 다름.'},
+  {id:'ee3', src:'e3', opp:'E', domain:'counter', dir:'-', kind:'fact', verified:true,
+    quote:'The utility has chartered four newbuild 174,000 cbm LNG carriers to be delivered from a Chinese yard in 2028–2029.',
+    ko:'경쟁 조선소 건조분 4척 용선 확정 — 제외 사유는 아니나 우선 검토를 막는 반대 근거. 잔여 물량 대비 선박 수 확인 필요.'},
+  {id:'ee4', src:'e4', opp:'E', domain:'counter', dir:'-', kind:'fact', verified:true,
+    quote:'The utility recently fixed four newbuilds from a Greek owner to cover part of its Gulf Coast volumes.',
+    ko:'동일 원출처(GR-OWNER-2026-01) 재인용 — 독립 증거로 계산하지 않음.'},
+  // F 오만
+  {id:'ef0', src:'a3', opp:'F', domain:'fit', dir:'+', kind:'fact', verified:true,
+    quote:'당기 LNG운반선 174K급 12척 인도, 누적 인도 실적 200척 이상.',
+    ko:'174K급 인도 실적 — 선종 연결 가능. (사례 A와 같은 원문 재사용)'},
+  {id:'ef1', src:'f1', opp:'F', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'The debottlenecking programme will lift Qalhat\'s nameplate capacity to 11.4 mtpa.',
+    ko:'칼하트 생산능력 11.4 MTPA로 확대 — 수요 변화 확인.'},
+  {id:'ef1ar', src:'f1ar', opp:'F', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'وسيتم الانتهاء من أعمال التوسعة في الربع الأول من عام 2027.',
+    ko:'(아랍어 원문) 완공 목표 2027년 1분기 — 영어판에 없는 일정. 동일 원출처라 중복 계산 없음.'},
+  {id:'ef2', src:'f2', opp:'F', domain:'counter', dir:'+', kind:'fact', verified:true,
+    quote:'Loadings at Qalhat continued uninterrupted as the terminal lies outside the Strait of Hormuz.',
+    ko:'호르무즈 밖 기지 — 카타르 카드의 통항 제한 반대 근거가 이 프로젝트에는 적용되지 않음을 확인.'},
+  {id:'ef3', src:'f3', opp:'F', domain:'buyer', dir:'+', kind:'interp', verified:true,
+    quote:'Sources expect Oman\'s state-owned ASYAD to be tasked with lifting the incremental volumes.',
+    ko:'ASYAD 선대 활용 전망 — 해석. 운송 주체와 선대 확보 계획은 공식 확인 필요.'},
+  // G 이집트
+  {id:'eg0', src:'a3', opp:'G', domain:'fit', dir:'+', kind:'fact', verified:true,
+    quote:'당기 LNG운반선 174K급 12척 인도, 누적 인도 실적 200척 이상.',
+    ko:'174K급 인도 실적 — 선종 자체는 연결 가능하나 수요 방향이 반대.'},
+  {id:'eg1', src:'g1', opp:'G', domain:'demand', dir:'-', kind:'fact', verified:true, trigger:'이집트 LNG 수출 재개 공식 발표',
+    quote:'LNG exports from Idku and Damietta are suspended; a floating storage and regasification unit has been chartered to secure domestic supply.',
+    ko:'수출 중단·수입 전환 — LNG운반선 신조 수요는 감소 방향. 수출 재개를 재검토 트리거로 등록.'},
+  {id:'eg1ar', src:'g1ar', opp:'G', domain:'demand', dir:'-', kind:'fact', verified:true,
+    quote:'تم التعاقد على الوحدة العائمة لمدة خمس سنوات قابلة للتجديد.',
+    ko:'(아랍어 원문) FSRU 임차 5년(갱신 가능) — 영어판에 없는 기간. 수입 전환이 단기가 아님을 뒷받침.'},
+  {id:'eg2', src:'g2', opp:'G', domain:'demand', dir:'+', kind:'interp', verified:true,
+    quote:'Exports from Damietta could resume if new East Mediterranean supply materialises.',
+    ko:'수출 재개 가능성 — 해석. 뒷받침으로 계산하지 않음.'},
+  // H 사우디
+  {id:'eh0', src:'a3', opp:'H', domain:'fit', dir:'+', kind:'fact', verified:true,
+    quote:'당기 LNG운반선 174K급 12척 인도, 누적 인도 실적 200척 이상.',
+    ko:'174K급 인도 실적 — 선종 연결 가능. 다만 연결할 수요 자체가 미확인.'},
+  {id:'eh1', src:'h1', opp:'H', domain:'demand', dir:'+', kind:'interp', verified:true,
+    quote:'Industry watchers see Saudi Arabia positioning for LNG exports through overseas equity stakes.',
+    ko:'수출 진출 관측 — 해석. 공식 확정 프로젝트 없음. 자료가 없으면 기회를 만들지 않는다.'},
+  // D
+  {id:'ed1', src:'d1', opp:'D', domain:'demand', dir:'+', kind:'fact', verified:true,
+    quote:'The North Field South phase is scheduled to commence production in 2029, with shipping arrangements to be finalised closer to start-up.',
+    ko:'2029년 생산 개시 예정, 운송 계획은 개시 직전 확정 — 구매 결정 시점이 멀다.'},
+];
+
+/* ========== 기회 (분석 단위: 국가 × 프로젝트·구매 주체 × 사업 유형 × 대상 기업) ========== */
+const OPPS = [
+  {id:'A', caseLabel:'사례 A · 추가 조사 예상', country:'아랍에미리트', project:'루와이스 LNG (Ruwais LNG)', buyer:'ADNOC / ADNOC L&S (추정)', type:'LNG운반선 신조', target:'HD한국조선해양 조선부문', asOf:'2026-09-17', projectStatus:'ongoing', decisionEta:'2027-06',
+    change:'LNG 생산 확대 프로젝트 최종투자결정·착공 (9.6 MTPA, 2028 첫 생산)', ingestOrder:['a3','a1','a1ar','a2']},
+  {id:'B', caseLabel:'사례 B · 반대 근거 반영', country:'카타르', project:'North Field West 확대 (142 MTPA)', buyer:'QatarEnergy (해운 자회사 경유)', type:'LNG운반선 신조', target:'HD한국조선해양 조선부문', asOf:'2026-09-17', projectStatus:'ongoing', decisionEta:'2026-12',
+    change:'생산능력 142 MTPA 확대 계획 → 이후 128척 발주 완료·시설 피해·통항 제한 자료 유입', ingestOrder:['b0','b1','b1ar','b2','b3','b4','b5']},
+  {id:'C', caseLabel:'사례 C · 우선 검토 (과거 재현)', country:'카타르', project:'North Field East 확대 (110 MTPA)', buyer:'Qatar Petroleum', type:'LNG운반선 신조', target:'현대중공업그룹 조선부문', asOf:'2020-03-31', projectStatus:'ongoing', decisionEta:'2020-09',
+    change:'생산능력 77 → 110 MTPA 확대, 100척 이상 신조 확보 입찰 초청', ingestOrder:['c0','c1','c1ar','c2','c3'], replay:true},
+  {id:'E', caseLabel:'사례 E · 확장 검증 (비아랍권 · 영어 원문만)', ext:true, country:'미국', project:'US Gulf Coast LNG 2단계 (13 MTPA)', buyer:'유럽 유틸리티 (FOB 구매자)', type:'LNG운반선 신조', target:'HD한국조선해양 조선부문', asOf:'2026-09-17', projectStatus:'ongoing', decisionEta:'2027-03',
+    change:'2단계 최종투자결정 → 구매자(유럽)가 운송 책임, 일부 선박은 경쟁 조선소 건조분 용선 확정', ingestOrder:['a3','e1','e2','e3','e4']},
+  {id:'F', caseLabel:'사례 F · 비교군 (호르무즈 밖)', country:'오만', project:'Oman LNG 칼하트 확대 (11.4 MTPA)', buyer:'Oman LNG / ASYAD (추정)', type:'LNG운반선 신조', target:'HD한국조선해양 조선부문', asOf:'2026-09-17', projectStatus:'ongoing', decisionEta:'2027-06',
+    change:'칼하트 기지 생산능력 확대 — 호르무즈 통항 제한과 무관하게 선적 지속', ingestOrder:['a3','f1','f1ar','f3','f2']},
+  {id:'G', caseLabel:'사례 G · 수요 방향 반전', country:'이집트', project:'Idku·Damietta LNG 수출 재개', buyer:'EGAS (국영)', type:'LNG운반선 신조', target:'HD한국조선해양 조선부문', asOf:'2026-09-17', projectStatus:'suspended', decisionEta:'2028-06',
+    change:'LNG 수출 중단·FSRU 수입 전환 — 신조 수요는 반대 방향, FSRU 개조는 후속 확장 후보', ingestOrder:['a3','g1','g1ar','g2']},
+  {id:'H', caseLabel:'사례 H · 자료 부족 정직 출력', country:'사우디아라비아', project:'LNG 수출 프로젝트 (미확정)', buyer:'미확인', type:'LNG운반선 신조', target:'HD한국조선해양 조선부문', asOf:'2026-09-17', projectStatus:'ongoing', decisionEta:'2027-12',
+    change:'확인된 LNG 수출 프로젝트 없음 — 업계 관측 기사만 존재', ingestOrder:['a3','h1']},
+  {id:'D', caseLabel:'사례 D · 보류 예상', country:'카타르', project:'North Field South 후속 단계', buyer:'QatarEnergy', type:'LNG운반선 신조', target:'HD한국조선해양 조선부문', asOf:'2026-09-17', projectStatus:'ongoing', decisionEta:'2028-12',
+    change:'2029년 생산 개시 예정 단계 발표', ingestOrder:['d1']},
+];
+
+/* ========== 상태 ========== */
+const state = {
+  ingested: Object.fromEntries(OPPS.map(o=>[o.id,0])),
+  overrides: {},          // oppId -> {status, reason, at}
+  selected: 'B',
+  screen: 'list',
+  seq: 0,                 // 수신 시각 시뮬레이션
+  histAll: false,         // 이력: 유지·중복 항목 표시 여부
+  receivedAt: {},         // `${opp}:${src}` -> 수신 시각 문자열
+};
+
+/* ========== 유틸 ========== */
+const monthsBetween=(a,b)=>{const[ay,am]=a.split('-').map(Number),[by,bm]=b.split('-').map(Number);return (by-ay)*12+(bm-am);};
+const fmtNow=(n)=>{ // 시연용 수신 시각: 기준 시각 + n분
+  const d=new Date(2026,8,17,9,0,0); d.setMinutes(d.getMinutes()+n*7);
+  const z=v=>String(v).padStart(2,'0');
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ========== Evidence Engine ========== */
+// 기준일 이후 자료는 발표일 기준으로 코드에서 걸러냄
+function activeSources(opp, upto){
+  const n = upto ?? state.ingested[opp.id];
+  return opp.ingestOrder.slice(0,n).map(id=>S[id]).filter(s=>s.date<=opp.asOf);
+}
+function activeEvidence(opp, upto){
+  const srcIds = new Set(activeSources(opp,upto).map(s=>s.id));
+  return EVIDENCE.filter(e=>e.opp===opp.id && srcIds.has(e.src) && e.verified); // 검증 실패 문장은 저장하지 않음
+}
+// 중복 출처: 같은 originId의 근거는 1건으로 계산. 대표는 배열 순서가 아니라 원출처(primary) → 발표일 빠른 순으로 고른다
+function dedupe(evs){
+  const groups=new Map();
+  for(const e of evs){ const k=e.domain+'|'+e.dir+'|'+S[e.src].originId; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(e); }
+  const rep=new Set();
+  for(const g of groups.values()){
+    const best=[...g].sort((a,b)=>(S[b.src].primary?1:0)-(S[a.src].primary?1:0) || S[a.src].date.localeCompare(S[b.src].date))[0];
+    rep.add(best.id);
+  }
+  return evs.map(e=>rep.has(e.id)?e:{...e,dup:true});
+}
+function domainStatus(evs, domain){
+  const d = evs.filter(e=>e.domain===domain && !e.dup);
+  const pos = d.some(e=>e.dir==='+' && e.kind==='fact');   // 해석만으로는 뒷받침 처리하지 않음
+  const neg = d.some(e=>e.dir==='-');
+  if(pos && neg) return 'conf';
+  if(neg) return 'neg';
+  if(pos) return 'sup';
+  return 'lack';
+}
+function evaluate(opp, upto){
+  const evs = dedupe(activeEvidence(opp, upto));
+  const ds = Object.fromEntries(DOMAINS.map(d=>[d.id, domainStatus(evs,d.id)]));
+  const exclEv = evs.find(e=>e.domain==='counter' && e.excl && CONFIG.exclusionTypes.includes(e.excl) && e.kind==='fact' && S[e.src].primary && !e.dup);
+  let status, rule, reason, basis;
+  if(exclEv){ status='excluded'; rule='R1'; reason=`제외 유형 근거 확인: ${exclEv.excl}`; basis=[exclEv]; }
+  else if(opp.projectStatus!=='ongoing' || monthsBetween(opp.asOf, opp.decisionEta) > CONFIG.holdMonths){
+    status='hold'; rule='R2'; reason= opp.projectStatus!=='ongoing' ? '프로젝트 지연·중단 상태' : `구매 결정 예상(${opp.decisionEta})이 기준일로부터 ${monthsBetween(opp.asOf,opp.decisionEta)}개월 후 (기준 ${CONFIG.holdMonths}개월 초과)`; basis=[];
+  }
+  else if(['demand','gap','buyer','fit'].every(k=>ds[k]==='sup') && ds.counter!=='neg' && ds.counter!=='conf'){
+    status='priority'; rule='R3'; reason='수요·공급 공백·구매 주체·기업 적합성 4개 영역 뒷받침됨, 반대 근거 없음'; basis=evs.filter(e=>e.dir==='+'&&!e.dup);
+  }
+  else {
+    status='research'; rule='R4';
+    const lacks = DOMAINS.filter(d=>d.id!=='counter' && ds[d.id]==='lack').map(d=>d.nm);
+    const confs = DOMAINS.filter(d=>ds[d.id]==='conf').map(d=>d.nm);
+    const blocks = ds.counter==='neg' ? ['반대 근거 있음(제외 유형 아님)'] : [];
+    reason=[lacks.length?`자료 부족: ${lacks.join('·')}`:null, confs.length?`자료 충돌: ${confs.join('·')}`:null, ...blocks].filter(Boolean).join(' / ') || 'R1~R3 미해당';
+    basis=[];
+  }
+  const triggers = evs.filter(e=>e.trigger && !e.dup).map(e=>e.trigger);
+  if(status==='hold') triggers.push(`구매 결정 시점 공식 발표 (${opp.decisionEta} 전후)`);
+  return {status, rule, reason, basis, ds, evs, triggers:[...new Set(triggers)]};
+}
+function fitLevel(ds){ return ds.fit==='sup' ? 0 : (ds.fit==='conf'||ds.fit==='neg') ? 1 : 2; }
+const FIT_LABELS=['공개 역량상 연결 가능','일부 확인 필요','연결 근거 부족'];
+
+/* 미확인 사항 → 조사 질문 (질문 작성은 실제 구현에서 AI 담당) */
+const QUESTIONS = {
+  demand: {q:'수요 변화의 규모·시점을 발표기관 원문으로 확인했는가?', who:'국영 에너지기업 발표 · 정부 관보 · 아랍어판 통신사'},
+  gap:    {q:'기존 선대·기발주·용선으로 추가 물량을 충당할 수 있는가? 기발주 선박의 투입 대상 프로젝트는?', who:'선사 선대 공시 · 조선사 수주잔량 · 운송계약 발표'},
+  buyer:  {q:'선박 확보·운송계약을 결정하는 주체와 예상 시점은?', who:'프로젝트 사업자 · 해운 자회사 · 현지 증시 공시'},
+  fit:    {q:'대상 기업의 공개 사양·인도 실적이 요구 선종과 연결되는가?', who:'조선사 IR 자료 · 인도 실적 공시'},
+  counter:{q:'이미 완료된 발주, 경쟁사 계약, 참여 요건 등 진입 제약이 있는가?', who:'구매자 발표 · 경쟁사 수주 공시 · 입찰 공고(아랍어)'},
+};
+const CONF_Q = {
+  demand:{q:'생산 확대 계획과 생산 차질 보도가 충돌함 — 어느 쪽이 최신·공식인가? 확대 일정 수정 발표가 있는가?', who:'발표기관 원문 재확인 · 시설 복구 일정 공식 발표'},
+};
+function openQuestions(opp, ev){
+  const out=[];
+  for(const d of DOMAINS){
+    const s=ev.ds[d.id];
+    if(s==='lack'){ const interp = ev.evs.find(e=>e.domain===d.id && e.kind==='interp'); out.push({domain:d, kind:'lack', ...QUESTIONS[d.id], note: interp?`해석 자료만 존재: "${interp.ko}"`:null}); }
+    if(s==='conf'){ out.push({domain:d, kind:'conf', ...(CONF_Q[d.id]||{q:`${d.nm} 영역 자료가 충돌함 — 원출처와 발표일을 대조해 해소`, who:'발표기관 원문'})}); }
+  }
+  return out;
+}
+
+/* 이력: 자료 순차 입력을 재생해 상태 변경 기록 생성 */
+function history(opp){
+  const items=[]; let prev=null;
+  const n=state.ingested[opp.id];
+  for(let k=1;k<=n;k++){
+    const src=S[opp.ingestOrder[k-1]];
+    const key=`${opp.id}:${src.id}`;
+    const at = state.receivedAt[key];
+    if(src.date>opp.asOf){ items.push({type:'skip', at, src, note:`발표일 ${src.date}이 기준일 ${opp.asOf} 이후 — 판정 입력에서 제외 (결과 비교용 보관)`}); continue; }
+    const ev=evaluate(opp,k);
+    const newEv = ev.evs.filter(e=>e.src===src.id);
+    const dupOnly = newEv.length && newEv.every(e=>e.dup);
+    const failed = EVIDENCE.filter(e=>e.opp===opp.id && e.src===src.id && !e.verified);
+    const ov=state.overrides[opp.id];
+    if(ov && at>ov.at && ev.status!==ov.autoStatus && !items.some(i=>i.type==='void')) items.push({type:'void', at, src, ov, to:ev, newEv, failed});
+    else if(prev===null){ items.push({type:'init', at, src, to:ev, newEv, failed}); }
+    else if(prev.status!==ev.status){ items.push({type:'change', at, src, from:prev, to:ev, newEv, failed}); }
+    else {
+      const domChanged = DOMAINS.filter(d=>prev.ds[d.id]!==ev.ds[d.id]);
+      items.push({type: dupOnly?'dup':'same', at, src, to:ev, newEv, failed, domChanged, trig: newEv.filter(e=>e.trigger&&!e.dup)});
+    }
+    prev=ev;
+  }
+  const ov=state.overrides[opp.id];
+  if(ov && n>0){
+    // 수정 적용 시점의 상태(from)는 그 시점까지 입력된 자료로 재계산
+    const kAt = opp.ingestOrder.findIndex((id,i)=> (state.receivedAt[opp.id+':'+id]||'') > ov.at);
+    const from = evaluate(opp, kAt===-1 ? n : kAt);
+    items.push({type:'manual', at:ov.at, from, ov});
+  }
+  return items;
+}
+function currentStatus(opp){
+  const ev=evaluate(opp);
+  const ov=state.overrides[opp.id];
+  if(!ov) return ev;
+  // 수정 이후 들어온 근거로 자동 판정이 바뀌면 수정은 효력을 잃고 자동 판정으로 돌아감 (재확인 필요 표시)
+  if(ev.status!==ov.autoStatus) return {...ev, voided:ov, reason:`${ev.reason} — 담당자 수정(${STATUS[ov.status].label})은 새 근거로 무효화됨, 재확인 필요`};
+  return {...ev, status:ov.status, rule:'수동', reason:`담당자 수정: ${ov.reason}`, auto:ev};
+}
+
+/* ========== 렌더 ========== */
+const $=s=>document.querySelector(s);
+function stBadge(status, rule){ const s=STATUS[status]; return `<span class="st ${s.cls}">${s.label}</span>${rule?` <span class="rule">${rule}</span>`:''}`; }
+const DOM_SHORT={demand:'수요',gap:'공급 공백',buyer:'구매 주체',fit:'적합성',counter:'반대 근거'};
+function domStrip(ds){ return `<div class="dom-strip">${DOMAINS.map(d=>`<span class="dom ${ds[d.id]}" title="${d.nm}: ${DSTAT[ds[d.id]]}">${DOM_SHORT[d.id]}</span>`).join('')}</div>`; }
+function evTags(e){
+  const s=S[e.src]; const t=[];
+  if(s.lang==='ar') t.push('<span class="tag ar">아랍어 원문</span>');
+  if(e.kind==='interp') t.push('<span class="tag interp">해석 · 뒷받침 미계산</span>');
+  if(e.excl) t.push(`<span class="tag excl">제외 유형 · ${e.excl}</span>`);
+  if(e.dup) t.push('<span class="tag dup">중복 출처 · 미계산</span>');
+  if(e.trigger) t.push(`<span class="tag after">재검토 트리거</span>`);
+  t.push(`<span class="mono">${s.date}</span>`);
+  t.push(`<span>${esc(s.org)}</span>`);
+  return t.join('');
+}
+
+function renderList(){
+  const el=$('#cards'); const n=OPPS.length; $('#n-list').textContent=n;
+  $('#legend').innerHTML=`<span class="t">증거 영역 상태</span>`+Object.entries({sup:'var(--ok)',neg:'var(--bad)',conf:'var(--conf)',lack:'var(--line-strong)'}).map(([k,c])=>`<span class="k"><i style="background:${c}"></i>${DSTAT[k]}</span>`).join('');
+  el.innerHTML = OPPS.map(o=>{
+    const ev=currentStatus(o); const k=state.ingested[o.id];
+    const lastSrc = k? S[o.ingestOrder[k-1]] : null;
+    const newCount = k ? ev.evs.filter(e=>e.src===lastSrc.id).length : 0;
+    const scls = k ? 's-'+STATUS[ev.status].cls : '';
+    return `<article class="card ${scls} ${o.id===state.selected?'active':''}" data-opp="${o.id}" tabindex="0" role="button">
+      <div>
+        <div class="where"><span>${o.country}</span><b>${esc(o.project)}</b><span>${esc(o.buyer)}</span>${o.ext?'<span class="tag after">확장 검증 · 아랍어 원문 없음</span>':''}${o.replay?'<span class="tag after">과거 재현</span>':''}</div>
+        <div class="change">${esc(o.change)}</div>
+        <div class="why"><span class="lbl">이유</span><span>${k? esc(ev.reason) : '자료 미입력 — 오른쪽 패널에서 자료를 입력하세요'}</span></div>
+      </div>
+      <div class="right">${k? stBadge(ev.status, ev.rule):'<span class="st hold">미판정</span>'}${ev.voided?'<span class="tag" style="color:var(--warn);border-color:var(--warn)">수동 수정 무효화</span>':''}${domStrip(ev.ds)}</div>
+      <div class="meta">
+        <div class="row">
+          <span>${o.type} → <b>${esc(o.target)}</b></span>
+          <span>기준일 <b class="mono">${o.asOf}</b></span>
+          <span>마지막 확인 ${lastSrc?`<b class="mono">${state.receivedAt[o.id+':'+lastSrc.id]}</b>`:'—'}</span>
+          <span>자료 <b>${k}/${o.ingestOrder.length}</b></span>
+        </div>
+        ${lastSrc? `<div class="new">${lastSrc.date>o.asOf?`기준일 이후 자료라 판정에서 제외 — ${esc(lastSrc.title)}`:`근거 ${newCount}건 추가 — ${esc(lastSrc.title)}`}</div>`:''}
+      </div>
+    </article>`;
+  }).join('');
+  el.querySelectorAll('.card').forEach(c=>{
+    const go=()=>{state.selected=c.dataset.opp; $('#opp-select').value=state.selected; setScreen('detail'); renderAll();};
+    c.addEventListener('click',go); c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+}
+
+function renderDetail(){
+  const o=OPPS.find(x=>x.id===state.selected); const ev=currentStatus(o); const k=state.ingested[o.id];
+  const pos=ev.evs.filter(e=>e.dir==='+'), neg=ev.evs.filter(e=>e.dir==='-');
+  const qs=openQuestions(o,ev);
+  const fl=fitLevel(ev.ds);
+  const evBtn=e=>`<button class="ev" data-ev="${e.id}"><div class="ko">${esc(e.ko)}</div><div class="tags">${evTags(e)}</div></button>`;
+  $('#screen-detail').innerHTML=`
+    <div class="dhead">
+      <div class="row"><div><div class="sub">${o.caseLabel} · ${o.country} · ${esc(o.buyer)}</div><h2>${esc(o.project)} — ${o.type}</h2></div>
+      <div>${k?stBadge(ev.status,ev.rule):'<span class="st hold">미판정</span>'}</div></div>
+      <div class="verdict"><span class="reason">${k? '판정 이유 · '+esc(ev.reason) : '자료가 아직 입력되지 않았습니다.'}</span>
+        ${ev.auto?`<span class="rule">자동 판정: ${STATUS[ev.auto.status].label} (${ev.auto.rule})</span>`:''}
+        ${ev.voided?`<span class="tag" style="color:var(--warn);border-color:var(--warn)">수동 수정 무효화 — 재확인 필요</span>`:''}</div>
+      <div class="domains">${DOMAINS.map(d=>`<div class="domain ${ev.ds[d.id]}"><div class="nm">${d.nm}</div><div class="q">${d.q}</div><div class="ds">${DSTAT[ev.ds[d.id]]}</div></div>`).join('')}</div>
+      <div class="fit"><span style="color:var(--ink-2)">기업 적합성 · ${esc(o.target)}</span>
+        <span class="lvl">${FIT_LABELS.map((l,i)=>`<span class="${i===fl?'on':''}">${l}</span>`).join('')}</span>
+        <span style="font-size:12px;color:var(--ink-3)">가격·도크 여력·납기·수주 의향은 내부 확인 필요</span></div>
+      ${ev.triggers.length?`<div class="trig">재검토 트리거 등록: ${ev.triggers.map(esc).join(' · ')} — 해당 사건 발생 시 기준일을 갱신해 다시 판정</div>`:''}
+      <div style="font-size:12px;color:var(--ink-3)">기준일 <span class="mono">${o.asOf}</span> · 구매 결정 예상 <span class="mono">${o.decisionEta}</span> · 프로젝트 상태 ${o.projectStatus==='ongoing'?'진행':o.projectStatus==='suspended'?'중단':'지연'} · 대상 기업 역량은 실제 실적·개발 중 기술·향후 계획을 구분해 기록</div>
+    </div>
+    <div class="cols">
+      <div class="col pos"><h4>긍정 근거 <span class="n">${pos.filter(e=>!e.dup).length}건${pos.some(e=>e.dup)?` (+중복 ${pos.filter(e=>e.dup).length})`:''}</span></h4>
+        ${pos.length?`<div class="ev-list">${pos.map(evBtn).join('')}</div>`:'<div class="empty">아직 없음</div>'}</div>
+      <div class="col neg"><h4>반대 근거 <span class="n">${neg.filter(e=>!e.dup).length}건${neg.some(e=>e.dup)?` (+중복 ${neg.filter(e=>e.dup).length})`:''}</span></h4>
+        ${neg.length?`<div class="ev-list">${neg.map(evBtn).join('')}</div>`:'<div class="empty">아직 없음</div>'}</div>
+      <div class="col unk"><h4>미확인 사항 <span class="n">${qs.length}건</span></h4>
+        ${qs.length?qs.map(q=>`<div class="unk-item"><div class="dm">${q.domain.nm} · ${q.kind==='conf'?'자료 충돌':'자료 부족'}</div><div>${esc(q.q)}</div>${q.note?`<div class="who">${esc(q.note)}</div>`:''}<div class="who">확인 대상: ${esc(q.who)}</div></div>`).join('')
+          : `<div class="empty">${k?'핵심 영역 모두 확인됨':'자료 미입력'}</div>`}</div>
+    </div>
+    <details class="override-box" ${state.overrides[o.id]?'open':''}>
+      <summary>담당자 상태 수정 <span>규칙 판정을 덮어씀 · 사유 필수 · 이력에 기록</span></summary>
+      <div class="override">
+        <div class="row">
+          <select id="ov-status">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select>
+          <input id="ov-reason" style="flex:1;min-width:160px;font:inherit;padding:6px 8px;border:1px solid var(--line-strong);border-radius:4px;background:var(--surface-2);color:var(--ink)" placeholder="수정 사유">
+          <button class="btn" id="ov-apply" ${k?'':'disabled'}>적용</button>
+          ${state.overrides[o.id]?'<button class="btn" id="ov-clear">수정 해제</button>':''}
+        </div>
+      </div>
+    </details>`;
+  $('#screen-detail').querySelectorAll('.ev').forEach(b=>b.addEventListener('click',()=>openModal(b.dataset.ev)));
+  $('#ov-apply')?.addEventListener('click',()=>{const r=$('#ov-reason').value.trim(); if(!r){$('#ov-reason').focus();return;} state.overrides[o.id]={status:$('#ov-status').value, reason:r, at:fmtNow(++state.seq), autoStatus:evaluate(o).status}; renderAll();});
+  $('#ov-clear')?.addEventListener('click',()=>{delete state.overrides[o.id]; renderAll();});
+}
+
+function renderResearch(){
+  const rows=[];
+  for(const o of OPPS){ if(!state.ingested[o.id]) continue; const ev=currentStatus(o); if(ev.status==='excluded') continue;
+    for(const q of openQuestions(o,ev)) rows.push({o,ev,q}); }
+  $('#n-research').textContent=rows.length;
+  $('#screen-research').innerHTML= rows.length? `<div class="tbl-wrap"><table>
+    <thead><tr><th>기회</th><th>상태</th><th>영역</th><th>아직 답하지 못한 질문</th><th>확인할 기관·기업·자료 유형</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr><td><b>${r.o.country}</b><br><span style="color:var(--ink-2)">${esc(r.o.project)}</span></td><td>${stBadge(r.ev.status)}</td><td>${r.q.domain.nm}<br><span style="font-size:11px;color:${r.q.kind==='conf'?'var(--conf)':'var(--ink-3)'}">${r.q.kind==='conf'?'자료 충돌':'자료 부족'}</span></td><td>${esc(r.q.q)}${r.q.note?`<div style="font-size:12px;color:var(--ink-3);margin-top:3px">${esc(r.q.note)}</div>`:''}</td><td style="color:var(--ink-2)">${esc(r.q.who)}</td></tr>`).join('')}</tbody></table></div>
+    <p style="font-size:12px;color:var(--ink-3)">제외 판정된 기회는 목록에서 빠집니다(해당 프로젝트·해당 기회에만 적용, 국가·기업 전체 제외 아님). 질문 문안은 실제 구현에서 언어모델이 작성하고 확인 대상은 근거 영역별 자료 유형 목록에서 가져옵니다.</p>`
+    : '<div class="empty panel">입력된 자료가 없거나 모든 핵심 영역이 확인되었습니다.</div>';
+}
+
+function renderHistory(){
+  const all=[];
+  for(const o of OPPS) for(const h of history(o)) all.push({o,h});
+  all.sort((a,b)=>(a.h.at||'').localeCompare(b.h.at||''));
+  $('#n-history').textContent=all.filter(x=>['change','init','manual'].includes(x.h.type)).length;
+  const majorTypes=['change','init','manual','void'];
+  const shown = state.histAll ? all : all.filter(x=>majorTypes.includes(x.h.type) || x.h.failed?.length || x.h.trig?.length);
+  const tools=`<div class="h-tools"><label><input type="checkbox" id="hist-all" ${state.histAll?'checked':''}> 상태 유지·중복 출처·기준일 이후 항목도 표시</label><span style="color:var(--ink-3)">상태 변경 ${all.filter(x=>majorTypes.includes(x.h.type)).length}건 / 전체 ${all.length}건</span></div>`;
+  $('#screen-history').innerHTML= all.length? tools+`<div class="hist">${shown.map(({o,h})=>{
+    const head=`<span style="color:var(--ink-3)">${o.country} · ${esc(o.project)}</span>`;
+    let body='';
+    if(h.type==='init') body=`<div class="ch">${head}</div><div class="ch">최초 판정 → ${stBadge(h.to.status,h.to.rule)}</div><div class="src">촉발 자료: <b>${esc(h.src.title)}</b> · 발표일 <span class="mono">${h.src.date}</span></div>${h.failed?.length?`<div class="h-note" style="color:var(--bad)">근거 문장 검증 실패 ${h.failed.length}건 폐기: "${esc(h.failed[0].quote)}"</div>`:''}`;
+    else if(h.type==='change') body=`<div class="ch">${head}</div><div class="ch">${stBadge(h.from.status,h.from.rule)} <span class="arrow">→</span> ${stBadge(h.to.status,h.to.rule)}</div><div class="src">촉발 근거: <b>${h.newEv.map(e=>esc(e.ko)).join(' / ')}</b></div><div class="src">원문: ${esc(h.src.title)} · 발표일 <span class="mono">${h.src.date}</span> · ${esc(h.src.org)}</div><div class="h-note">${esc(h.to.reason)}</div>${h.failed?.length?`<div class="h-note" style="color:var(--bad)">근거 문장 검증 실패 ${h.failed.length}건 폐기: "${esc(h.failed[0].quote)}"</div>`:''}`;
+    else if(h.type==='skip') body=`<div class="ch">${head}</div><div class="ch"><span class="tag after">기준일 이후 자료</span> <span class="src">${esc(h.src.title)}</span></div><div class="h-note">${esc(h.note)}</div>`;
+    else if(h.type==='dup') body=`<div class="ch">${head}</div><div class="ch"><span class="tag dup">중복 출처</span> <span class="src">${esc(h.src.title)}</span></div><div class="h-note">원출처 ${S[h.src.id].originId} 재인용 — 상태 변화 없음, 독립 증거로 계산하지 않음</div>`;
+    else if(h.type==='void') body=`<div class="ch">${head}</div><div class="ch">${stBadge(h.ov.status,'수동')} <span class="arrow">→</span> ${stBadge(h.to.status,h.to.rule)} <span class="tag" style="color:var(--warn)">수동 수정 무효화</span></div><div class="src">새 근거로 자동 판정이 바뀌어 담당자 수정(사유: ${esc(h.ov.reason)})이 효력을 잃음 — 재확인 필요</div><div class="src">촉발 근거: <b>${h.newEv.map(e=>esc(e.ko)).join(' / ')||'—'}</b></div><div class="src">원문: ${esc(h.src.title)} · 발표일 <span class="mono">${h.src.date}</span></div>${h.failed?.length?`<div class="h-note" style="color:var(--bad)">근거 문장 검증 실패 ${h.failed.length}건 폐기: "${esc(h.failed[0].quote)}"</div>`:''}`;
+    else if(h.type==='manual') body=`<div class="ch">${head}</div><div class="ch">${stBadge(h.from.status,h.from.rule)} <span class="arrow">→</span> ${stBadge(h.ov.status,'수동')}</div><div class="src">수정자: 담당자 · 사유: <b>${esc(h.ov.reason)}</b></div>`;
+    else body=`<div class="ch">${head}</div><div class="ch">상태 유지 ${stBadge(h.to.status,h.to.rule)} <span class="src">· ${esc(h.src.title)}</span></div>${h.domChanged.length?`<div class="h-note">영역 변화: ${h.domChanged.map(d=>`${d.nm} → ${DSTAT[h.to.ds[d.id]]}`).join(', ')}</div>`:''}${h.trig.length?`<div class="h-note">재검토 트리거 등록: ${h.trig.map(e=>esc(e.trigger)).join(', ')}</div>`:''}${h.failed?.length?`<div class="h-note" style="color:var(--bad)">근거 문장 검증 실패 ${h.failed.length}건 폐기: "${esc(h.failed[0].quote)}"</div>`:''}`;
+    const weight = majorTypes.includes(h.type) ? 'major' : 'minor';
+    return `<div class="h-item ${weight} ${h.type==='manual'?'h-manual':''}"><div class="h-time"><span>수신·갱신 시각</span><b class="mono">${h.at}</b>${h.src?`<span>원문 발표일</span><b class="mono">${h.src.date}</b>`:''}</div><div class="h-body">${body}</div></div>`;
+  }).join('')}</div>`
+  : '<div class="empty panel">아직 자료가 입력되지 않았습니다.</div>';
+  $('#hist-all')?.addEventListener('change',e=>{state.histAll=e.target.checked; renderHistory();});
+}
+
+function renderPanel(){
+  const o=OPPS.find(x=>x.id===state.selected); const k=state.ingested[o.id]; const n=o.ingestOrder.length;
+  $('#opp-kv').innerHTML=`<dt>국가</dt><dd>${o.country}</dd><dt>프로젝트</dt><dd>${esc(o.project)}</dd><dt>기준일</dt><dd class="mono">${o.asOf}${o.replay?' <span class="tag after">과거 재현</span>':''}</dd><dt>입력</dt><dd>${k} / ${n} 건</dd>`;
+  $('#prog').style.width=(100*k/n)+'%';
+  $('#btn-next').disabled = k>=n; $('#btn-all').disabled = k>=n;
+  $('#queue').innerHTML=o.ingestOrder.map((id,i)=>{const s=S[id]; const cls=i<k?(s.date>o.asOf?'skip':'done'):(i===k?'next':''); return `<div class="${cls}" title="${esc(s.title)}"><span class="mono">${s.date}</span><span class="ttl">${s.lang==='ar'?'<span class="tag ar">ar</span> ':''}${esc(s.title)}</span></div>`;}).join('');
+  $('#cfg-hold').value=CONFIG.holdMonths;
+  $('#cfg-excl').textContent=CONFIG.exclusionTypes.join(' · ');
+}
+
+function openModal(evId){
+  const e=EVIDENCE.find(x=>x.id===evId); const s=S[e.src]; const o=OPPS.find(x=>x.id===e.opp);
+  const d=DOMAINS.find(x=>x.id===e.domain);
+  $('#modal-root').innerHTML=`<div class="modal-bg" id="mbg"><div class="modal" role="dialog" aria-modal="true">
+    <header><h4>${esc(s.title)}</h4><button class="x" id="mclose" aria-label="닫기">×</button></header>
+    <div class="sec"><div class="lbl">원문 문장 (${s.lang==='ar'?'아랍어':s.lang==='en'?'영어':'한국어'})</div><div class="quote" ${s.lang==='ar'?'dir="rtl" lang="ar"':''}>${esc(e.quote)}</div></div>
+    <div class="sec"><div class="lbl">한국어 설명</div><div>${esc(e.ko)}</div></div>
+    <div class="sec"><dl class="kv"><dt>발행기관</dt><dd>${esc(s.org)}</dd><dt>발표일</dt><dd class="mono">${s.date}</dd><dt>수집·수신</dt><dd class="mono">${state.receivedAt[o.id+':'+s.id]||'—'}</dd><dt>원출처 ID</dt><dd class="mono">${s.originId} ${s.primary?'(원출처)':'(재인용)'}</dd><dt>증거 영역</dt><dd>${d.nm} · ${e.dir==='+'?'긍정':'반대'} · ${e.kind==='fact'?'사실':'해석'}</dd><dt>링크</dt><dd><span style="color:var(--ink-3)">시연용 자료 — 링크 없음</span></dd></dl></div>
+    <div class="sec"><div class="lbl">AI 출력 검증</div><div class="chk">근거 문장 원문 대조: ${e.verified?'<span class="ok">일치</span>':'<span class="no">불일치 — 폐기</span>'}</div><div class="chk">구조화 출력 형식 검사: <span class="ok">통과</span></div><div class="chk" style="color:var(--ink-3);font-size:12px">프롬프트 v0.2-extract · 모델 버전 기록됨 (재현용)</div></div>
+    ${s.arOnly?`<div class="sec"><div class="lbl">아랍어 원문 기여</div><div>${esc(s.arOnly)}</div></div>`:''}
+  </div></div>`;
+  const onKey=ev=>{if(ev.key==='Escape') close();};
+  const close=()=>{$('#modal-root').innerHTML=''; document.removeEventListener('keydown',onKey);};
+  $('#mclose').addEventListener('click',close); $('#mbg').addEventListener('click',ev=>{if(ev.target.id==='mbg')close();});
+  document.addEventListener('keydown',onKey);
+}
+
+function setScreen(id){ state.screen=id; document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.screen===id)); document.querySelectorAll('.screen').forEach(s=>s.hidden = s.id!=='screen-'+id); }
+function renderAll(){ renderPanel(); renderList(); renderDetail(); renderResearch(); renderHistory(); }
+
+/* ========== 이벤트 ========== */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>setScreen(t.dataset.screen)));
+$('#opp-select').innerHTML=OPPS.map(o=>`<option value="${o.id}">${o.caseLabel} — ${o.country}</option>`).join('');
+$('#opp-select').value=state.selected;
+$('#opp-select').addEventListener('change',e=>{state.selected=e.target.value; renderAll();});
+function ingest(o){ const k=state.ingested[o.id]; if(k>=o.ingestOrder.length) return; state.receivedAt[o.id+':'+o.ingestOrder[k]]=fmtNow(++state.seq); state.ingested[o.id]=k+1; }
+$('#btn-next').addEventListener('click',()=>{ingest(OPPS.find(x=>x.id===state.selected)); renderAll();});
+$('#btn-all').addEventListener('click',()=>{const o=OPPS.find(x=>x.id===state.selected); while(state.ingested[o.id]<o.ingestOrder.length) ingest(o); renderAll();});
+$('#btn-reset').addEventListener('click',()=>{const o=OPPS.find(x=>x.id===state.selected); state.ingested[o.id]=0; delete state.overrides[o.id]; renderAll();});
+$('#cfg-hold').addEventListener('change',e=>{CONFIG.holdMonths=Number(e.target.value)||24; renderAll();});
+
+if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ document.getElementById('lane-svg')?.pauseAnimations(); }
+
+/* 초기 상태: 사례 B는 발주 완료 자료까지, A·C·D는 전체 입력해 화면이 '작업 중' 상태로 열림 */
+(function boot(){
+  for(const id of ['A','C','D','E','F','G','H']){ const o=OPPS.find(x=>x.id===id); while(state.ingested[id]<o.ingestOrder.length) ingest(o); }
+  const b=OPPS.find(x=>x.id==='B'); for(let i=0;i<4;i++) ingest(b);
+  renderAll();
+})();
+</script>
